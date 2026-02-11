@@ -52,7 +52,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <RouteBodyClass />
-        <header id="site-navbar" className="mx-auto flex w-full justify-center overflow-visible px-3 pt-4 sm:pt-6">
+        <header id="site-navbar" className="mx-auto flex w-full justify-center overflow-visible px-0 pt-0 sm:px-3 sm:pt-6">
           <Navbar />
         </header>
         {children}

@@ -10,6 +10,7 @@ import { formatRelativeTime } from "@/lib/utils";
 
 export default async function Home() {
   const crabCount = 10;
+  const mobileCrabCount = 2;
   const talkingCrabCount = 7;
   const crabChats: Record<number, ChatData> = buildInitialCrabChats(
     Math.min(talkingCrabCount, crabCount),
@@ -43,19 +44,20 @@ export default async function Home() {
   return (
     <div className="relative overflow-hidden">
       <BeachSprinkles className="z-10" />
-      <section className="relative z-20 h-[340px] w-full overflow-hidden sm:h-[410px] md:h-[480px] lg:h-[540px]">
-        <div className="absolute inset-x-0 top-0 h-[64px] bg-[#1271CB] sm:h-[76px] md:h-[88px] lg:h-[104px]" />
-        <div className="absolute inset-x-0 bottom-0 top-[64px] sm:top-[76px] md:top-[88px] lg:top-[104px]">
+      <section className="relative z-20 h-[400px] w-full overflow-hidden sm:h-[410px] md:h-[480px] lg:h-[540px]">
+        <div className="absolute inset-x-0 top-0 h-[96px] bg-[#1271CB] sm:h-[76px] md:h-[88px] lg:h-[104px]" />
+        <div className="absolute inset-x-0 bottom-0 top-[96px] sm:top-[76px] md:top-[88px] lg:top-[104px]">
           <PixelBeach />
         </div>
         <BeachRocks className="top-[36%] h-[20%] sm:top-[38%] sm:h-[20%] lg:top-[40%] lg:h-[20%]" />
         <BeachCrabs
           count={crabCount}
+          mobileCount={mobileCrabCount}
           chats={crabChats}
           className="z-40 top-[36%] h-[20%] sm:top-[38%] sm:h-[20%] lg:top-[40%] lg:h-[20%]"
         />
       </section>
-      <main className="relative z-20 flex justify-center py-6">
+      <main className="relative z-20 -mt-20 flex justify-center pb-6 sm:-mt-24 md:-mt-28 lg:-mt-32">
         <Feed items={items} />
       </main>
     </div>

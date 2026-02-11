@@ -8,8 +8,8 @@ const ROCKS = [
 ];
 
 const SIDE_PALMS = [
-  { side: "left" as const, edgeOffsetPx: -18, topPx: -94, flipped: false },
-  { side: "right" as const, edgeOffsetPx: -18, topPx: -90, flipped: true },
+  { side: "left" as const, edgeOffsetPx: -18, topClass: "-top-[74px] sm:-top-[94px]", flipped: false },
+  { side: "right" as const, edgeOffsetPx: -18, topClass: "-top-[70px] sm:-top-[90px]", flipped: true },
 ];
 type BeachRocksProps = {
   className?: string;
@@ -46,9 +46,8 @@ export default function BeachRocks({ className, style }: BeachRocksProps) {
       {SIDE_PALMS.map((palm, i) => (
         <div
           key={`palm-${i}`}
-          className="absolute"
+          className={`absolute ${palm.topClass}`}
           style={{
-            top: `${palm.topPx}px`,
             ...(palm.side === "left"
               ? { left: `${palm.edgeOffsetPx}px` }
               : { right: `${palm.edgeOffsetPx}px` }),

@@ -42,6 +42,7 @@ function shuffleIds(ids: number[]) {
 
 export type BeachCrabsProps = {
   count?: number;
+  mobileCount?: number;
   seed?: number;
   chats?: Record<number, ChatData>;
   className?: string;
@@ -50,6 +51,7 @@ export type BeachCrabsProps = {
 
 export default function BeachCrabs({
   count = 10,
+  mobileCount,
   seed = 42,
   chats,
   className,
@@ -59,16 +61,26 @@ export default function BeachCrabs({
   const recentChatTextsRef = useRef<string[]>([]);
   const [speakingIds, setSpeakingIds] = useState<Set<number>>(new Set());
   const lastSpokeCycleRef = useRef<Record<number, number>>({});
+  const [isMobile, setIsMobile] = useState(false);
+  const visibleCount = Math.max(1, isMobile ? (mobileCount ?? count) : count);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 639px)");
+    const apply = () => setIsMobile(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
 
   const crabs = useMemo<CrabData[]>(() => {
     const rand = seededRandom(seed);
-    const slotWidth = 90 / count;
+    const slotWidth = 90 / visibleCount;
     const laneStarts = [0, 16, 32, 48];
     const laneJitter = 10;
     let previousLane = -1;
     let laneStreak = 0;
 
-    return Array.from({ length: count }, (_, i) => {
+    return Array.from({ length: visibleCount }, (_, i) => {
       let lane = Math.floor(rand() * laneStarts.length);
 
       // Keep lanes mixed so crabs don't form one flat marching line.
@@ -93,14 +105,14 @@ export default function BeachCrabs({
         wanderDuration: 8 + rand() * 7,
       };
     });
-  }, [count, seed]);
+  }, [seed, visibleCount]);
 
   const chatIds = useMemo(
     () =>
-      Object.keys(chats ?? {})
+      Object.keys(activeChats)
         .map((id) => Number(id))
-        .filter((id) => Number.isFinite(id)),
-    [chats],
+        .filter((id) => Number.isFinite(id) && id < visibleCount),
+    [activeChats, visibleCount],
   );
 
   useEffect(() => {
@@ -198,7 +210,7 @@ export default function BeachCrabs({
 
       const candidates = shuffleIds(chatIds);
       const selected: number[] = [];
-      const maxSpeakers = Math.max(1, Math.min(3, Math.ceil(chatIds.length / 3)));
+      const maxSpeakers = isMobile ? 1 : Math.max(1, Math.min(3, Math.ceil(chatIds.length / 3)));
       const cooldownCycles = 2;
 
       for (const id of candidates) {
@@ -244,7 +256,7 @@ export default function BeachCrabs({
       if (clearTimer) window.clearTimeout(clearTimer);
       if (nextCycleTimer) window.clearTimeout(nextCycleTimer);
     };
-  }, [chatIds, crabs]);
+  }, [chatIds, crabs, isMobile]);
 
   return (
     <div

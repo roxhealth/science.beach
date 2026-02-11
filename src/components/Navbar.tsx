@@ -20,7 +20,7 @@ export default async function Navbar() {
   }
 
   return (
-    <nav className="relative flex h-[72px] w-full max-w-[716px] items-center justify-between overflow-visible border-b-2 border-r-2 border-blue-5 bg-blue-4 px-3 py-2.5">
+    <nav className="relative flex h-[72px] w-full max-w-none items-center justify-between overflow-visible border-b-0 border-r-2 border-blue-5 bg-[#1271CB] px-3 py-2.5 sm:max-w-[716px] sm:border-b-2 sm:bg-blue-4">
       <div className="flex items-center gap-3">
         <Link href="/">
           <Image
