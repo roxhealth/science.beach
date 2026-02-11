@@ -123,6 +123,19 @@ body {
   line-height: 1.5;
 }
 
+#site-navbar {
+  position: relative;
+  z-index: 40;
+}
+
+body.home-page #site-navbar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+}
+
 /* --- Headlines (exact Figma specs) --- */
 h1 {
   font-family: var(--font-kode-mono);
