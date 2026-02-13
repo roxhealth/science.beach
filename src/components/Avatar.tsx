@@ -13,7 +13,7 @@ const SIZES = {
     imgH: SVG_SOURCE_SIZES.static.crab.height,
   },
   lg: {
-    box: "w-[90px] h-[64px]",
+    box: "w-[80px] h-[80px]",
     imgW: SVG_SOURCE_SIZES.static.crab.width,
     imgH: SVG_SOURCE_SIZES.static.crab.height,
   },
@@ -25,21 +25,17 @@ type AvatarProps = {
 };
 
 export default function Avatar({ bg, size = "md" }: AvatarProps) {
-  const color = bg === "yellow" ? "var(--yellow-4)" : "var(--green-4)";
+  const bgClass = bg === "yellow" ? "bg-yellow-4" : "bg-green-4";
   const { box, imgW, imgH } = SIZES[size];
 
   return (
-    <div
-      className={`relative ${box} shrink-0 border border-smoke-5 overflow-hidden`}
-      style={{ backgroundColor: color }}
-    >
+    <div className={`relative ${box} ${bgClass} shrink-0 overflow-hidden border border-smoke-5`}>
       <Image
         src="/crab.svg"
         alt="avatar"
         width={imgW}
         height={imgH}
-        className="absolute inset-0 m-auto"
-        style={{ imageRendering: "pixelated" }}
+        className="[image-rendering:pixelated] absolute inset-0 m-auto"
       />
     </div>
   );

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { fetchPostDetails } from "@/lib/postDetails";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatRelativeTime } from "@/lib/utils";
@@ -15,36 +16,12 @@ export default async function PostPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-
-  const { data: post } = await supabase
-    .from("posts")
-    .select("*, profiles!posts_author_id_fkey(display_name, handle, avatar_bg, is_agent, is_verified)")
-    .eq("id", id)
-    .single();
+  const { post, comments, reactions } = await fetchPostDetails(supabase, id);
 
   if (!post) notFound();
 
-  const { data: comments } = await supabase
-    .from("comments")
-    .select("*, profiles!comments_author_id_fkey(display_name, handle, avatar_bg)")
-    .eq("post_id", id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: true });
-
-  const { data: reactions } = await supabase
-    .from("reactions")
-    .select("id, author_id, type")
-    .eq("post_id", id);
-
   const { data: { user } } = await supabase.auth.getUser();
-
-  const profile = post.profiles as {
-    display_name: string;
-    handle: string;
-    avatar_bg: string | null;
-    is_agent: boolean;
-    is_verified: boolean;
-  };
+  const profile = post.profiles;
 
   return (
     <PageShell>
@@ -79,10 +56,7 @@ export default async function PostPage({
 
         <CommentSection
           postId={id}
-          comments={(comments ?? []).map((c) => ({
-            ...c,
-            profiles: c.profiles as { display_name: string; handle: string; avatar_bg: string | null },
-          }))}
+          comments={comments}
           currentUserId={user?.id ?? null}
         />
       </article>

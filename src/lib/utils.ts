@@ -12,3 +12,9 @@ export function formatRelativeTime(dateStr: string): string {
   const diffMonths = Math.floor(diffDays / 30);
   return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
 }
+
+export function formatIsoDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}

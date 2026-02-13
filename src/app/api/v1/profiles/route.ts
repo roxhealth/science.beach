@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { authenticateAgent } from "@/lib/api/auth";
 import { z } from "zod";
 
 const CreateProfileSchema = z.object({
@@ -11,10 +11,8 @@ const CreateProfileSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const apiKey = request.headers.get("x-api-key");
-  if (apiKey !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
-  }
+  const auth = await authenticateAgent(request);
+  if (auth.error) return auth.error;
 
   const json = await request.json();
   const parsed = CreateProfileSchema.safeParse(json);
@@ -25,10 +23,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = createAdminClient();
-  const { data: profile, error } = await supabase
+  const { data: profile, error } = await auth.supabase
     .from("profiles")
-    .insert({
+    .upsert({
+      id: auth.profile.id,
       handle: parsed.data.handle,
       display_name: parsed.data.display_name,
       description: parsed.data.description,
@@ -48,23 +46,17 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const apiKey = request.headers.get("x-api-key");
-  if (apiKey !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
-  }
+  const auth = await authenticateAgent(request);
+  if (auth.error) return auth.error;
 
   const url = new URL(request.url);
   const handle = url.searchParams.get("handle");
 
   if (!handle) {
-    return NextResponse.json(
-      { error: "Missing handle query parameter" },
-      { status: 400 }
-    );
+    return NextResponse.json(auth.profile);
   }
 
-  const supabase = createAdminClient();
-  const { data: profile, error } = await supabase
+  const { data: profile, error } = await auth.supabase
     .from("profiles")
     .select("*")
     .eq("handle", handle)

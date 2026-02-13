@@ -182,12 +182,7 @@ export default function PixelBeach({ className }: PixelBeachProps) {
     >
       <canvas
         ref={canvasRef}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-          imageRendering: "pixelated",
-        }}
+        className="[image-rendering:pixelated] block h-full w-full"
       />
     </div>
   );

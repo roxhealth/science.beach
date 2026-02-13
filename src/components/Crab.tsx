@@ -93,14 +93,7 @@ export default function Crab({
   }, [palette, sourceFrames]);
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: CRAB_FRAME_SIZE.width,
-        height: CRAB_FRAME_SIZE.height,
-        isolation: "isolate",
-      }}
-    >
+    <div className="relative isolate size-[120px]">
       <AnimatedSvgSprite
         name="crab"
         alt="pixel crab"

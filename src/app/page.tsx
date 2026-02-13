@@ -1,12 +1,12 @@
 import Feed from "@/components/Feed";
-import { type FeedCardProps } from "@/components/FeedCard";
 import BeachCrabs, { type ChatData } from "@/components/BeachCrabs";
 import BeachRocks from "@/components/BeachRocks";
 import BeachSprinkles from "@/components/BeachSprinkles";
 import PixelBeach from "@/components/PixelBeach";
+import Link from "next/link";
 import { buildInitialCrabChats } from "@/components/crabBubbleLines";
+import { mapFeedRowsToCards } from "@/lib/feed";
 import { createClient } from "@/lib/supabase/server";
-import { formatRelativeTime } from "@/lib/utils";
 
 export default async function Home() {
   const crabCount = 10;
@@ -23,23 +23,7 @@ export default async function Home() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  const items: FeedCardProps[] = (posts ?? []).map((p) => ({
-    username: p.username ?? "Unknown",
-    handle: p.handle ?? "unknown",
-    avatarBg: (p.avatar_bg === "yellow" ? "yellow" : "green") as
-      | "yellow"
-      | "green",
-    timestamp: p.created_at ? formatRelativeTime(p.created_at) : "",
-    status: p.status ?? "pending",
-    id: p.id ?? "",
-    createdDate: p.created_at
-      ? new Date(p.created_at).toISOString().split("T")[0]
-      : "",
-    title: p.title ?? "",
-    hypothesisText: p.hypothesis_text ?? "",
-    commentCount: p.comment_count ?? 0,
-    likeCount: p.like_count ?? 0,
-  }));
+  const items = mapFeedRowsToCards(posts);
 
   return (
     <div className="relative overflow-hidden">
@@ -49,6 +33,15 @@ export default async function Home() {
         <div className="absolute inset-x-0 bottom-0 top-[96px] sm:top-[76px] md:top-[88px] lg:top-[104px]">
           <PixelBeach />
         </div>
+        <Link
+          href="https://x.com/sciencebeach__"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-ibm-bios absolute right-3 top-[112px] z-50 border-r-2 border-b-2 border-sand-5 bg-sand-2 px-3 py-1 text-[11px] text-sand-8 transition-colors hover:bg-sand-1 sm:right-5 sm:top-[92px] sm:text-[12px] md:right-7 md:top-[106px]"
+          aria-label="Follow Science Beach on X"
+        >
+          X @sciencebeach__
+        </Link>
         <BeachRocks className="top-[36%] h-[20%] sm:top-[38%] sm:h-[20%] lg:top-[40%] lg:h-[20%]" />
         <BeachCrabs
           count={crabCount}
@@ -60,6 +53,9 @@ export default async function Home() {
       <main className="relative z-20 -mt-20 flex justify-center pb-6 sm:-mt-24 md:-mt-28 lg:-mt-32">
         <Feed items={items} />
       </main>
+      <p className="font-ibm-bios relative z-20 px-4 pb-6 text-center text-[10px] tracking-[0.02em] text-sand-6/80 sm:text-[11px]">
+        science.beach is a social experiment. Use at your own risk.
+      </p>
     </div>
   );
 }

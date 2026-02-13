@@ -136,6 +136,32 @@ body.home-page #site-navbar {
   z-index: 50;
 }
 
+.font-ibm-bios {
+  font-family: var(--font-ibm-bios);
+}
+
+.text-shadow-nav-logo {
+  text-shadow: 0px -1px 0px var(--dark-space), 0px 1px 0px var(--blue-2);
+}
+
+.text-shadow-feed-header {
+  text-shadow: 0px -1px 0px var(--smoke-5), 0px 1px 0px var(--smoke-7);
+}
+
+.text-shadow-bubble {
+  text-shadow: 0.5px 0.5px 0px #fffefe, -0.5px -0.5px 0px #c2b4a9;
+}
+
+.icon-mask-comment {
+  mask-image: url("/icons/comment.svg");
+  -webkit-mask-image: url("/icons/comment.svg");
+}
+
+.icon-mask-heart {
+  mask-image: url("/icons/heart.svg");
+  -webkit-mask-image: url("/icons/heart.svg");
+}
+
 /* --- Headlines (exact Figma specs) --- */
 h1 {
   font-family: var(--font-kode-mono);
@@ -174,7 +200,8 @@ h5 {
   line-height: 1.2;
 }
 
-h6 {
+h6,
+.h6 {
   font-family: var(--font-kode-mono);
   font-size: 1.5rem; /* 24px */
   font-weight: 400;
@@ -243,6 +270,13 @@ h6 {
 .label-m-bold {
   font-family: var(--font-kode-mono);
   font-size: 0.875rem; /* 14px */
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.label-s-bold {
+  font-family: var(--font-kode-mono);
+  font-size: 0.75rem; /* 12px */
   font-weight: 700;
   line-height: 1.5;
 }

@@ -12,27 +12,18 @@ export default function ChatBalloon({
   const isShort = variant === "short";
 
   return (
-    <div
-      className="flex flex-col items-start"
-      style={{ animation: "bubble-appear 0.4s ease-out, bubble-float 4s ease-in-out 0.4s infinite" }}
-    >
+    <div className="[animation:bubble-appear_0.4s_ease-out,bubble-float_4s_ease-in-out_0.4s_infinite] flex flex-col items-start">
       {/* Bubble box */}
       <div
-        className={`bg-sand-1 border-b-2 border-r-2 border-sand-5 font-bold leading-[1.4] text-sand-8 ${
+        className={`text-shadow-bubble bg-sand-1 border-b-2 border-r-2 border-sand-5 font-bold leading-[1.4] text-sand-8 ${
           isShort ? "px-3 py-2 text-center text-[13px]" : "w-[220px] p-2.5 text-[11px]"
         }`}
-        style={{
-          textShadow: "0.5px 0.5px 0px #fffefe, -0.5px -0.5px 0px #c2b4a9",
-        }}
       >
         {text}
       </div>
 
       {/* Pixel-art tail (10x6px, pointing down-left) */}
-      <div
-        className="relative h-[6px] w-[10px]"
-        style={{ transform: tailSide === "right" ? "scaleX(-1)" : undefined }}
-      >
+      <div className={`relative h-[6px] w-[10px] ${tailSide === "right" ? "[transform:scaleX(-1)]" : ""}`}>
         {/* Row 1: sand-3 at 0,0 then sand-5 at 2-8,0 */}
         <div className="absolute left-0 top-0 size-[2px] bg-sand-3" />
         <div className="absolute left-[2px] top-0 size-[2px] bg-sand-5" />

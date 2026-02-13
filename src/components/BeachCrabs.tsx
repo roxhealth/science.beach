@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import Crab from "./Crab";
 import ChatBalloon, { type ChatBalloonProps } from "./ChatBalloon";
 import { CRAB_COLOR_PALETTES } from "./crabColors";
@@ -17,6 +16,8 @@ type CrabData = {
   id: number;
   x: number;
   y: number;
+  xClass: string;
+  yClass: string;
   flipped: boolean;
   paletteIndex: number;
   wanderDistance: number;
@@ -40,13 +41,78 @@ function shuffleIds(ids: number[]) {
   return copy;
 }
 
+const LEFT_BUCKETS = [3, 8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58, 63, 68, 73, 78, 83, 88, 93] as const;
+const LEFT_BUCKET_CLASSES = [
+  "left-[3%]",
+  "left-[8%]",
+  "left-[13%]",
+  "left-[18%]",
+  "left-[23%]",
+  "left-[28%]",
+  "left-[33%]",
+  "left-[38%]",
+  "left-[43%]",
+  "left-[48%]",
+  "left-[53%]",
+  "left-[58%]",
+  "left-[63%]",
+  "left-[68%]",
+  "left-[73%]",
+  "left-[78%]",
+  "left-[83%]",
+  "left-[88%]",
+  "left-[93%]",
+] as const;
+const TOP_BUCKETS = [0, 5, 10, 16, 21, 26, 32, 37, 42, 48, 53, 58] as const;
+const TOP_BUCKET_CLASSES = [
+  "top-[0%]",
+  "top-[5%]",
+  "top-[10%]",
+  "top-[16%]",
+  "top-[21%]",
+  "top-[26%]",
+  "top-[32%]",
+  "top-[37%]",
+  "top-[42%]",
+  "top-[48%]",
+  "top-[53%]",
+  "top-[58%]",
+] as const;
+const WANDER_POS_CLASSES = ["[--wander-x:10px]", "[--wander-x:14px]", "[--wander-x:18px]", "[--wander-x:22px]"] as const;
+const WANDER_NEG_CLASSES = ["[--wander-x:-10px]", "[--wander-x:-14px]", "[--wander-x:-18px]", "[--wander-x:-22px]"] as const;
+const WANDER_ANIM_CLASSES = [
+  "[animation:crab-wander_8s_ease-in-out_infinite]",
+  "[animation:crab-wander_10s_ease-in-out_infinite]",
+  "[animation:crab-wander_12s_ease-in-out_infinite]",
+  "[animation:crab-wander_14s_ease-in-out_infinite]",
+] as const;
+const WANDER_DELAY_CLASSES = [
+  "[animation-delay:0s]",
+  "[animation-delay:-1.3s]",
+  "[animation-delay:-2.6s]",
+  "[animation-delay:-3.9s]",
+  "[animation-delay:-5.2s]",
+] as const;
+
+function nearestBucketClass(value: number, buckets: readonly number[], classes: readonly string[]) {
+  let nearestIndex = 0;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < buckets.length; i += 1) {
+    const distance = Math.abs(value - buckets[i]);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestIndex = i;
+    }
+  }
+  return classes[nearestIndex];
+}
+
 export type BeachCrabsProps = {
   count?: number;
   mobileCount?: number;
   seed?: number;
   chats?: Record<number, ChatData>;
   className?: string;
-  style?: CSSProperties;
 };
 
 export default function BeachCrabs({
@@ -55,10 +121,13 @@ export default function BeachCrabs({
   seed = 42,
   chats,
   className,
-  style,
 }: BeachCrabsProps) {
-  const [activeChats, setActiveChats] = useState<Record<number, ChatData>>(chats ?? {});
-  const recentChatTextsRef = useRef<string[]>([]);
+  const [activeChats, setActiveChats] = useState<Record<number, ChatData>>(() => chats ?? {});
+  const recentChatTextsRef = useRef<string[]>(
+    Object.values(chats ?? {})
+      .map((entry) => entry.text)
+      .slice(0, 10),
+  );
   const [speakingIds, setSpeakingIds] = useState<Set<number>>(new Set());
   const lastSpokeCycleRef = useRef<Record<number, number>>({});
   const [isMobile, setIsMobile] = useState(false);
@@ -77,34 +146,48 @@ export default function BeachCrabs({
     const slotWidth = 90 / visibleCount;
     const laneStarts = [0, 16, 32, 48];
     const laneJitter = 10;
-    let previousLane = -1;
-    let laneStreak = 0;
 
-    return Array.from({ length: visibleCount }, (_, i) => {
-      let lane = Math.floor(rand() * laneStarts.length);
+    const generation = Array.from({ length: visibleCount }).reduce<{
+      items: CrabData[];
+      previousLane: number;
+      laneStreak: number;
+    }>(
+      (state, _, i) => {
+        let lane = Math.floor(rand() * laneStarts.length);
 
-      // Keep lanes mixed so crabs don't form one flat marching line.
-      if (lane === previousLane && laneStreak >= 1) {
-        lane = (lane + 1 + Math.floor(rand() * (laneStarts.length - 1))) % laneStarts.length;
-      }
+        // Keep lanes mixed so crabs don't form one flat marching line.
+        if (lane === state.previousLane && state.laneStreak >= 1) {
+          lane = (lane + 1 + Math.floor(rand() * (laneStarts.length - 1))) % laneStarts.length;
+        }
 
-      if (lane === previousLane) {
-        laneStreak += 1;
-      } else {
-        previousLane = lane;
-        laneStreak = 0;
-      }
+        const nextStreak = lane === state.previousLane ? state.laneStreak + 1 : 0;
+        const nextPreviousLane = lane === state.previousLane ? state.previousLane : lane;
 
-      return {
-        id: i,
-        x: 3 + i * slotWidth + rand() * slotWidth * 0.6,
-        y: laneStarts[lane] + rand() * laneJitter,
-        flipped: rand() > 0.5,
-        paletteIndex: Math.floor(rand() * CRAB_COLOR_PALETTES.length),
-        wanderDistance: 10 + Math.floor(rand() * 15),
-        wanderDuration: 8 + rand() * 7,
-      };
-    });
+        const nextCrab: CrabData = {
+          id: i,
+          x: 3 + i * slotWidth + rand() * slotWidth * 0.6,
+          y: laneStarts[lane] + rand() * laneJitter,
+          xClass: "",
+          yClass: "",
+          flipped: rand() > 0.5,
+          paletteIndex: Math.floor(rand() * CRAB_COLOR_PALETTES.length),
+          wanderDistance: 10 + Math.floor(rand() * 15),
+          wanderDuration: 8 + rand() * 7,
+        };
+
+        nextCrab.xClass = nearestBucketClass(nextCrab.x, LEFT_BUCKETS, LEFT_BUCKET_CLASSES);
+        nextCrab.yClass = nearestBucketClass(nextCrab.y, TOP_BUCKETS, TOP_BUCKET_CLASSES);
+
+        return {
+          items: [...state.items, nextCrab],
+          previousLane: nextPreviousLane,
+          laneStreak: nextStreak,
+        };
+      },
+      { items: [], previousLane: -1, laneStreak: 0 },
+    );
+
+    return generation.items;
   }, [seed, visibleCount]);
 
   const chatIds = useMemo(
@@ -114,14 +197,6 @@ export default function BeachCrabs({
         .filter((id) => Number.isFinite(id) && id < visibleCount),
     [activeChats, visibleCount],
   );
-
-  useEffect(() => {
-    const nextChats = chats ?? {};
-    setActiveChats(nextChats);
-    recentChatTextsRef.current = Object.values(nextChats)
-      .map((entry) => entry.text)
-      .slice(0, 10);
-  }, [chats]);
 
   useEffect(() => {
     if (chatIds.length === 0) return;
@@ -183,10 +258,7 @@ export default function BeachCrabs({
   }, [chatIds]);
 
   useEffect(() => {
-    if (chatIds.length === 0) {
-      setSpeakingIds(new Set());
-      return;
-    }
+    if (chatIds.length === 0) return;
 
     const crabById = new Map(crabs.map((crab) => [crab.id, crab]));
     let disposed = false;
@@ -259,40 +331,25 @@ export default function BeachCrabs({
   }, [chatIds, crabs, isMobile]);
 
   return (
-    <div
-      className={className ? `absolute w-full ${className}` : "absolute w-full top-[280px] h-[120px]"}
-      style={style}
-    >
+    <div className={className ? `absolute w-full ${className}` : "absolute w-full top-[280px] h-[120px]"}>
       {crabs.map((crab) => {
         const chat = activeChats[crab.id];
         const isSpeaking = speakingIds.has(crab.id);
         const wanders = !!chat;
+        const wanderDistanceClass = crab.flipped
+          ? WANDER_NEG_CLASSES[crab.id % WANDER_NEG_CLASSES.length]
+          : WANDER_POS_CLASSES[crab.id % WANDER_POS_CLASSES.length];
+        const wanderAnimClass = WANDER_ANIM_CLASSES[crab.id % WANDER_ANIM_CLASSES.length];
+        const wanderDelayClass = WANDER_DELAY_CLASSES[crab.id % WANDER_DELAY_CLASSES.length];
         return (
           <div
             key={crab.id}
-            className="absolute"
-            style={{
-              left: `${crab.x}%`,
-              top: `${crab.y}%`,
-              ...(wanders
-                ? {
-                    "--wander-x": `${crab.flipped ? -crab.wanderDistance : crab.wanderDistance}px`,
-                    animation: `crab-wander ${crab.wanderDuration.toFixed(1)}s ease-in-out infinite`,
-                    animationDelay: `${(crab.id * -1.3).toFixed(1)}s`,
-                  }
-                : {}),
-            } as React.CSSProperties}
+            className={`absolute ${crab.xClass} ${crab.yClass} ${wanders ? `${wanderDistanceClass} ${wanderAnimClass} ${wanderDelayClass}` : ""}`}
           >
             <div className="relative">
               {chat && isSpeaking && (
                 <div
-                  className="pointer-events-none absolute z-10"
-                  style={{
-                    bottom: "calc(100% - 18px)",
-                    left: crab.flipped ? undefined : "46%",
-                    right: crab.flipped ? "46%" : undefined,
-                    willChange: "opacity",
-                  }}
+                  className={`pointer-events-none absolute bottom-[calc(100%-18px)] z-10 [will-change:opacity] ${crab.flipped ? "right-[46%]" : "left-[46%]"}`}
                 >
                   <ChatBalloon
                     text={chat.text}

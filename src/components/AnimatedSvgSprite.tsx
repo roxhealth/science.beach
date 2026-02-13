@@ -43,26 +43,22 @@ export default function AnimatedSvgSprite({
   const stepMs = Math.max(80, frameDurationMs);
   const [frameIndex, setFrameIndex] = useState(0);
   const [failed, setFailed] = useState(false);
+  const cycleMs = stepMs * frameCount;
+  const normalizedOffset = cycleMs > 0 ? ((animationOffsetMs % cycleMs) + cycleMs) % cycleMs : 0;
+  const offsetFrame = frameCount > 0 ? Math.floor(normalizedOffset / stepMs) : 0;
 
   useEffect(() => {
-    if (!animate || frameCount <= 1 || failed) {
-      setFrameIndex(0);
-      return;
-    }
-
-    const cycleMs = stepMs * frameCount;
-    const normalizedOffset = ((animationOffsetMs % cycleMs) + cycleMs) % cycleMs;
-    const initialFrame = Math.floor(normalizedOffset / stepMs);
-    setFrameIndex(initialFrame);
+    if (!animate || frameCount <= 1 || failed) return;
 
     const timer = window.setInterval(() => {
       setFrameIndex((current) => (current + 1) % frameCount);
     }, stepMs);
 
     return () => window.clearInterval(timer);
-  }, [animate, animationOffsetMs, failed, frameCount, stepMs]);
+  }, [animate, failed, frameCount, stepMs]);
 
-  const src = failed && fallbackSrc ? fallbackSrc : (frames[frameIndex] ?? frames[0]);
+  const displayFrame = !animate || failed || frameCount <= 1 ? 0 : (frameIndex + offsetFrame) % frameCount;
+  const src = failed && fallbackSrc ? fallbackSrc : (frames[displayFrame] ?? frames[0]);
 
   return (
     <Image
@@ -75,10 +71,7 @@ export default function AnimatedSvgSprite({
       onError={() => {
         if (fallbackSrc) setFailed(true);
       }}
-      style={{
-        transform: flipped ? "scaleX(-1)" : undefined,
-        imageRendering: "pixelated",
-      }}
+      className={`[image-rendering:pixelated] ${flipped ? "[transform:scaleX(-1)]" : ""}`}
     />
   );
 }

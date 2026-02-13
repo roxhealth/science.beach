@@ -191,26 +191,37 @@ export default function BeachSprinkles({ seed = 77, className }: BeachSprinklesP
     return placedItems;
   }, [seed]);
 
+  const itemPlacementCss = useMemo(
+    () =>
+      items
+        .map((item) => {
+          const itemWidth =
+            item.kind === "animated"
+              ? SVG_SOURCE_SIZES.animated[item.name].width
+              : SVG_SOURCE_SIZES.static.blueChair.width;
+          const leftPosition =
+            item.side === "left"
+              ? `calc(50% - ${FEED_CONTAINER_HALF_WIDTH}px - ${item.gutterOffset + itemWidth}px)`
+              : `calc(50% + ${FEED_CONTAINER_HALF_WIDTH}px + ${item.gutterOffset}px)`;
+
+          return `
+.sprinkle-${item.id} {
+  top: ${item.y.toFixed(2)}%;
+  left: ${leftPosition};
+  opacity: ${item.opacity};
+  transform-origin: center;
+  ${item.flipped ? "transform: scaleX(-1);" : ""}
+}
+`;
+        })
+        .join("\n"),
+    [items],
+  );
+
   return (
     <div className={className ? `pointer-events-none absolute inset-0 ${className}` : "pointer-events-none absolute inset-0"}>
       {items.map((item) => (
-        <div
-          key={item.id}
-          className="absolute"
-          style={{
-            top: `${item.y}%`,
-            opacity: item.opacity,
-            transform: item.flipped ? "scaleX(-1)" : undefined,
-            transformOrigin: "center",
-            ...(item.side === "left"
-              ? {
-                  left: `calc(50% - ${FEED_CONTAINER_HALF_WIDTH}px - ${item.gutterOffset + (item.kind === "animated" ? SVG_SOURCE_SIZES.animated[item.name].width : SVG_SOURCE_SIZES.static.blueChair.width)}px)`,
-                }
-              : {
-                  left: `calc(50% + ${FEED_CONTAINER_HALF_WIDTH}px + ${item.gutterOffset}px)`,
-                }),
-          }}
-        >
+        <div key={item.id} className={`sprinkle-${item.id} absolute`}>
           {item.kind === "animated" ? (
             <AnimatedSvgSprite
               name={item.name}
@@ -228,11 +239,12 @@ export default function BeachSprinkles({ seed = 77, className }: BeachSprinklesP
               alt="pixel beach chair"
               width={SVG_SOURCE_SIZES.static.blueChair.width}
               height={SVG_SOURCE_SIZES.static.blueChair.height}
-              style={{ imageRendering: "pixelated" }}
+              className="[image-rendering:pixelated]"
             />
           )}
         </div>
       ))}
+      <style jsx>{itemPlacementCss}</style>
     </div>
   );
 }

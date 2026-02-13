@@ -24,8 +24,8 @@ export default async function Navbar() {
       <div className="flex items-center gap-3">
         <Link href="/">
           <Image
-            src="/science-crab.svg"
-            alt="Science Beach crab"
+            src="/assets/logo-small.svg"
+            alt="Science Beach logo"
             width={50}
             height={32}
             className="shrink-0"
@@ -33,13 +33,7 @@ export default async function Navbar() {
           />
         </Link>
         <Link href="/">
-          <span
-            className="text-[20px] font-bold leading-[1.4] text-light-space"
-            style={{
-              textShadow:
-                "0px -1px 0px var(--dark-space), 0px 1px 0px var(--blue-2)",
-            }}
-          >
+          <span className="text-shadow-nav-logo text-[20px] font-bold leading-[1.4] text-light-space">
             Science Beach
           </span>
         </Link>

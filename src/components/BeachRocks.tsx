@@ -1,36 +1,26 @@
-import type { CSSProperties } from "react";
 import AnimatedSvgSprite from "./AnimatedSvgSprite";
 import { SVG_SOURCE_SIZES } from "./svgSourceSizes";
 
 const ROCKS = [
-  { x: 30, y: 18, flipped: true },
-  { x: 62, y: 24, flipped: false },
+  { positionClass: "left-[30%] top-[18%]", flipped: true },
+  { positionClass: "left-[62%] top-[24%]", flipped: false },
 ];
 
 const SIDE_PALMS = [
-  { side: "left" as const, edgeOffsetPx: -18, topClass: "-top-[74px] sm:-top-[94px]", flipped: false },
-  { side: "right" as const, edgeOffsetPx: -18, topClass: "-top-[70px] sm:-top-[90px]", flipped: true },
+  { edgeClass: "left-[-18px]", topClass: "-top-[74px] sm:-top-[94px]", flipped: false },
+  { edgeClass: "right-[-18px]", topClass: "-top-[70px] sm:-top-[90px]", flipped: true },
 ];
 type BeachRocksProps = {
   className?: string;
-  style?: CSSProperties;
 };
 
-export default function BeachRocks({ className, style }: BeachRocksProps) {
+export default function BeachRocks({ className }: BeachRocksProps) {
   return (
     <div
       className={className ? `pointer-events-none absolute w-full ${className}` : "pointer-events-none absolute w-full top-[280px] h-[120px]"}
-      style={style}
     >
       {ROCKS.map((rock, i) => (
-        <div
-          key={i}
-          className="absolute"
-          style={{
-            left: `${rock.x}%`,
-            top: `${rock.y}%`,
-          }}
-        >
+        <div key={i} className={`absolute ${rock.positionClass}`}>
           <AnimatedSvgSprite
             name="rock"
             alt="pixel rock"
@@ -46,12 +36,7 @@ export default function BeachRocks({ className, style }: BeachRocksProps) {
       {SIDE_PALMS.map((palm, i) => (
         <div
           key={`palm-${i}`}
-          className={`absolute ${palm.topClass}`}
-          style={{
-            ...(palm.side === "left"
-              ? { left: `${palm.edgeOffsetPx}px` }
-              : { right: `${palm.edgeOffsetPx}px` }),
-          }}
+          className={`absolute ${palm.topClass} ${palm.edgeClass}`}
         >
           <AnimatedSvgSprite
             name="palm"

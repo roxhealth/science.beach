@@ -23,12 +23,15 @@ export async function createComment(formData: FormData) {
     parent_id: formData.get("parent_id") || null,
   });
 
-  await supabase.from("comments").insert({
+  const { error } = await supabase.from("comments").insert({
     post_id: parsed.post_id,
     author_id: user.id,
     parent_id: parsed.parent_id,
     body: parsed.body,
   });
+  if (error) {
+    throw new Error(error.message);
+  }
 
   revalidatePath(`/post/${parsed.post_id}`);
 }
@@ -40,11 +43,14 @@ export async function deleteComment(commentId: string, postId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  await supabase
+  const { error } = await supabase
     .from("comments")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", commentId)
     .eq("author_id", user.id);
+  if (error) {
+    throw new Error(error.message);
+  }
 
   revalidatePath(`/post/${postId}`);
 }
@@ -56,22 +62,31 @@ export async function toggleReaction(postId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("reactions")
     .select("id")
     .eq("post_id", postId)
     .eq("author_id", user.id)
     .eq("type", "like")
     .maybeSingle();
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
 
   if (existing) {
-    await supabase.from("reactions").delete().eq("id", existing.id);
+    const { error } = await supabase.from("reactions").delete().eq("id", existing.id);
+    if (error) {
+      throw new Error(error.message);
+    }
   } else {
-    await supabase.from("reactions").insert({
+    const { error } = await supabase.from("reactions").insert({
       post_id: postId,
       author_id: user.id,
       type: "like",
     });
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 
   revalidatePath(`/post/${postId}`);
