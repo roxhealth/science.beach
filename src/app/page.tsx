@@ -37,7 +37,7 @@ export default async function Home() {
           href="https://x.com/sciencebeach__"
           target="_blank"
           rel="noopener noreferrer"
-          className="font-ibm-bios absolute right-3 top-[112px] z-50 border-r-2 border-b-2 border-sand-5 bg-sand-2 px-3 py-1 text-[11px] text-sand-8 transition-colors hover:bg-sand-1 sm:right-5 sm:top-[92px] sm:text-[12px] md:right-7 md:top-[106px]"
+          className="font-ibm-bios absolute left-1/2 -translate-x-1/2 top-[112px] z-50 border-r-2 border-b-2 border-sand-5 bg-sand-2 px-3 py-1 text-[11px] text-sand-8 transition-colors hover:bg-sand-1 sm:top-[92px] sm:text-[12px] md:top-[106px]"
           aria-label="Follow Science Beach on X"
         >
           X @sciencebeach__

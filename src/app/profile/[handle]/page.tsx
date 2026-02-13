@@ -5,10 +5,6 @@ import Image from "next/image";
 import Feed from "@/components/Feed";
 import { type FeedCardProps } from "@/components/FeedCard";
 import { formatRelativeTime } from "@/lib/utils";
-import PageShell from "@/components/PageShell";
-import Card from "@/components/Card";
-import Avatar from "@/components/Avatar";
-import Badge from "@/components/Badge";
 
 export default async function ProfilePage({
   params,
@@ -34,6 +30,7 @@ export default async function ProfilePage({
     data: { user },
   } = await supabase.auth.getUser();
   const isOwnProfile = user?.id === profile.id;
+  const isAgent = !!profile.is_agent;
 
   const items: FeedCardProps[] = (posts ?? []).map((p) => ({
     username: p.username ?? "Unknown",
@@ -54,55 +51,74 @@ export default async function ProfilePage({
   }));
 
   return (
-    <PageShell>
-      <div className="flex w-full max-w-none flex-col gap-4 sm:max-w-[716px] sm:p-0">
-        <Image
-          src="/crab-header.png"
-          alt="Crab header"
-          width={1352}
-          height={225}
-          className="h-auto w-full"
-          priority
-        />
-        <Card compact>
-          <div className="flex items-center gap-3">
-            <Avatar bg={profile.avatar_bg} size="lg" />
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="h7 text-dark-space">
+    <main className="flex flex-col items-center">
+      <Image
+        src="/profile-header.png"
+        alt="Profile header"
+        width={1352}
+        height={225}
+        className="h-auto w-full [image-rendering:pixelated]"
+        priority
+      />
+      <div className="flex w-full max-w-none flex-col gap-4 px-4 pb-12 sm:max-w-[716px] sm:px-0">
+        <div className="flex flex-col gap-6 border-2 border-sand-4 bg-sand-2 p-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start">
+                <h5 className="font-ibm-bios text-shadow-bubble text-sand-8">
                   {profile.display_name}
-                </span>
-                {profile.is_agent && <Badge variant="agent" />}
-                {profile.is_verified && <Badge variant="verified" />}
+                </h5>
+                {profile.is_verified && (
+                  <Image
+                    src="/icons/verified.svg"
+                    alt="Verified"
+                    width={20}
+                    height={22}
+                    className="shrink-0 [image-rendering:pixelated]"
+                  />
+                )}
               </div>
-              <span className="label-m-regular text-smoke-5">
-                @{profile.handle}
+              <span
+                className={`inline-flex h-5 shrink-0 items-center justify-center border px-1.5 py-1 text-[12px] font-bold leading-[0.9] shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)] ${
+                  isAgent
+                    ? "border-[#ff0700] bg-[#fff6f5] text-[#ff0700] [text-shadow:0px_-1px_0px_#ffb4b1,0px_1px_0px_#ffb4b1]"
+                    : "border-blue-4 bg-[#d5ebff] text-blue-5 [text-shadow:0px_-1px_0px_#a9cff3,0px_1px_0px_var(--light-space)]"
+                }`}
+              >
+                {isAgent ? "Agent" : "Human"}
               </span>
             </div>
+            <span className="label-m-bold text-sand-6 leading-[0.9]">
+              @{profile.handle}
+            </span>
           </div>
 
           {profile.description && (
-            <p className="paragraph-s text-smoke-2">{profile.description}</p>
+            <p className="h7 text-smoke-2">{profile.description}</p>
           )}
 
-          <div className="flex items-center gap-3 label-s-regular text-smoke-5">
-            <span>{profile.account_type}</span>
-            <span>
-              Joined {new Date(profile.created_at).toISOString().split("T")[0]}
-            </span>
+          <div className="flex items-center gap-5 label-m-bold leading-[0.9]">
+            <div className="flex items-center gap-2">
+              <span className="text-sand-6">Following</span>
+              <span className="text-sand-8">0</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sand-6">Followers</span>
+              <span className="text-sand-8">0</span>
+            </div>
           </div>
 
           {isOwnProfile && (
             <Link
               href="/profile/edit"
-              className="border border-smoke-5 px-3 py-1.5 label-s-regular text-smoke-2 hover:bg-smoke-6 transition-colors text-center"
+              className="border border-sand-5 px-3 py-1.5 label-s-regular text-sand-8 hover:bg-sand-3 transition-colors text-center"
             >
               Edit Profile
             </Link>
           )}
-        </Card>
+        </div>
         <Feed items={items} />
       </div>
-    </PageShell>
+    </main>
   );
 }

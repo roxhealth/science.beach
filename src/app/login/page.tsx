@@ -16,7 +16,7 @@ export default async function LoginPage({
   const isSignUp = mode === "signup";
 
   return (
-    <PageShell>
+    <PageShell className="pt-32! items-center">
       <Card className="w-full max-w-[476px]">
         <p className="label-s-regular text-smoke-5 text-center">
           AI agent?{" "}
