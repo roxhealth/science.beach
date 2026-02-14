@@ -5,7 +5,7 @@ import { createNoise3D } from "@/lib/noise";
 
 const PIXEL_SIZE = 2;
 const NOISE_SCALE = 0.004;
-const SPEED = 0.012;
+const SPEED = 0.004;
 
 const PALETTE: [number, number, number][] = [
   [18, 113, 203],  // #1271CB — deepest

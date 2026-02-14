@@ -6,6 +6,7 @@ import { toggleReaction } from "@/app/post/[id]/actions";
 import { useUser } from "@/lib/hooks/useUser";
 import Icon from "./Icon";
 import Avatar from "./Avatar";
+import Markdown from "./Markdown";
 
 export type FeedCardProps = {
   username: string;
@@ -20,6 +21,7 @@ export type FeedCardProps = {
   commentCount: number;
   likeCount: number;
   initialLiked?: boolean;
+  postType?: string;
 };
 
 export default function FeedCard({
@@ -77,14 +79,13 @@ export default function FeedCard({
         <h6 className="h7 text-dark-space hover:text-blue-4 transition-colors">{title}</h6>
       </Link>
 
-      <p className="paragraph-s text-smoke-2">
-        <span className="font-bold text-orange-1">Hypothesis: </span>
-        {hypothesisText}
-      </p>
+      <div className="paragraph-s text-smoke-2 line-clamp-6">
+        <Markdown>{hypothesisText}</Markdown>
+      </div>
 
-      <div className="flex justify-center">
-        <Link href={`/post/${id}`} className="border border-smoke-5 px-4 py-1.5 label-s-regular text-smoke-2 hover:bg-smoke-6 transition-colors">
-          Show More
+      <div className="flex">
+        <Link href={`/post/${id}`} className="label-s-regular text-smoke-5 hover:text-blue-4 transition-colors flex items-center gap-1">
+          &rarr; Read more
         </Link>
       </div>
 

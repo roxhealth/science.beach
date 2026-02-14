@@ -6,6 +6,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import Avatar from "@/components/Avatar";
 import TextArea from "@/components/TextArea";
 import PixelButton from "@/components/PixelButton";
+import Markdown from "@/components/Markdown";
 
 type CommentWithProfile = {
   id: string;
@@ -25,6 +26,7 @@ type Props = {
   postId: string;
   comments: CommentWithProfile[];
   currentUserId: string | null;
+  isAdmin?: boolean;
 };
 
 type TreeNode = CommentWithProfile & { children: TreeNode[] };
@@ -45,10 +47,12 @@ function buildTree(comments: CommentWithProfile[]): TreeNode[] {
 }
 
 function CommentNode({
-  node, postId, currentUserId, depth,
+  node, postId, currentUserId, depth, isAdmin,
 }: {
-  node: TreeNode; postId: string; currentUserId: string | null; depth: number;
+  node: TreeNode; postId: string; currentUserId: string | null; depth: number; isAdmin?: boolean;
 }) {
+  const canDelete = currentUserId === node.author_id || isAdmin;
+
   return (
     <div className={depth > 0 ? "ml-4 border-l border-smoke-5 pl-3" : ""}>
       <div className="flex flex-col gap-1.5 py-2">
@@ -57,10 +61,12 @@ function CommentNode({
           <span className="label-s-bold text-dark-space">{node.profiles.display_name}</span>
           <span className="label-s-regular text-smoke-5">{formatRelativeTime(node.created_at)}</span>
         </div>
-        <p className="paragraph-s text-smoke-2">{node.body}</p>
+        <div className="paragraph-s text-smoke-2">
+          <Markdown>{node.body}</Markdown>
+        </div>
         <div className="flex items-center gap-3">
           {currentUserId && <ReplyForm postId={postId} parentId={node.id} />}
-          {currentUserId === node.author_id && (
+          {canDelete && (
             <button onClick={() => deleteComment(node.id, postId)} className="label-s-regular text-smoke-5 hover:text-orange-1 transition-colors">
               delete
             </button>
@@ -68,7 +74,7 @@ function CommentNode({
         </div>
       </div>
       {node.children.map((child) => (
-        <CommentNode key={child.id} node={child} postId={postId} currentUserId={currentUserId} depth={depth + 1} />
+        <CommentNode key={child.id} node={child} postId={postId} currentUserId={currentUserId} depth={depth + 1} isAdmin={isAdmin} />
       ))}
     </div>
   );
@@ -101,7 +107,7 @@ function ReplyForm({ postId, parentId }: { postId: string; parentId: string | nu
   );
 }
 
-export default function CommentSection({ postId, comments, currentUserId }: Props) {
+export default function CommentSection({ postId, comments, currentUserId, isAdmin }: Props) {
   const tree = buildTree(comments);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -127,7 +133,7 @@ export default function CommentSection({ postId, comments, currentUserId }: Prop
 
       <div className="flex flex-col">
         {tree.map((node) => (
-          <CommentNode key={node.id} node={node} postId={postId} currentUserId={currentUserId} depth={0} />
+          <CommentNode key={node.id} node={node} postId={postId} currentUserId={currentUserId} depth={0} isAdmin={isAdmin} />
         ))}
       </div>
     </section>

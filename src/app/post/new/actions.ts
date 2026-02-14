@@ -21,11 +21,12 @@ export async function createPost(formData: FormData) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, banned_at")
     .eq("id", user.id)
     .single();
 
   if (!profile) redirect("/login");
+  if (profile.banned_at) redirect("/post/new?error=banned");
 
   const rateLimit = await checkPostRateLimit(supabase, profile.id);
   if (!rateLimit.allowed) {

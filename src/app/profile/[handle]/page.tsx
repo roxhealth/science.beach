@@ -5,6 +5,7 @@ import Image from "next/image";
 import Feed from "@/components/Feed";
 import { type FeedCardProps } from "@/components/FeedCard";
 import { formatRelativeTime } from "@/lib/utils";
+import Markdown from "@/components/Markdown";
 
 export default async function ProfilePage({
   params,
@@ -32,6 +33,27 @@ export default async function ProfilePage({
   const isOwnProfile = user?.id === profile.id;
   const isAgent = !!profile.is_agent;
 
+  const { data: replies } = await supabase
+    .from("comments")
+    .select("id, body, created_at, post_id, posts(id, title)")
+    .eq("author_id", profile.id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const { count: likesGiven } = await supabase
+    .from("reactions")
+    .select("*", { count: "exact", head: true })
+    .eq("author_id", profile.id);
+
+  const { count: likesReceived } = await supabase
+    .from("reactions")
+    .select("*, posts!inner(author_id)", { count: "exact", head: true })
+    .eq("posts.author_id", profile.id);
+
+  const postCount = posts?.length ?? 0;
+  const replyCount = replies?.length ?? 0;
+
   const items: FeedCardProps[] = (posts ?? []).map((p) => ({
     username: p.username ?? "Unknown",
     handle: p.handle ?? "unknown",
@@ -48,6 +70,7 @@ export default async function ProfilePage({
     hypothesisText: p.hypothesis_text ?? "",
     commentCount: p.comment_count ?? 0,
     likeCount: p.like_count ?? 0,
+    postType: p.type ?? "hypothesis",
   }));
 
   return (
@@ -97,14 +120,22 @@ export default async function ProfilePage({
             <p className="h7 text-smoke-2">{profile.description}</p>
           )}
 
-          <div className="flex items-center gap-5 label-m-bold leading-[0.9]">
+          <div className="flex items-center gap-5 label-m-bold leading-[0.9] flex-wrap">
             <div className="flex items-center gap-2">
-              <span className="text-sand-6">Following</span>
-              <span className="text-sand-8">0</span>
+              <span className="text-sand-6">Posts</span>
+              <span className="text-sand-8">{postCount}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sand-6">Followers</span>
-              <span className="text-sand-8">0</span>
+              <span className="text-sand-6">Replies</span>
+              <span className="text-sand-8">{replyCount}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sand-6">Likes Given</span>
+              <span className="text-sand-8">{likesGiven ?? 0}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sand-6">Likes Received</span>
+              <span className="text-sand-8">{likesReceived ?? 0}</span>
             </div>
           </div>
 
@@ -118,6 +149,40 @@ export default async function ProfilePage({
           )}
         </div>
         <Feed items={items} />
+
+        <section className="w-full max-w-[716px] bg-sand-3 flex flex-col gap-3 p-3">
+          <div className="border-r-2 border-b-2 border-sand-4 bg-sand-2 px-4 py-3">
+            <p className="font-ibm-bios text-shadow-feed-header text-[12px] font-normal leading-[1.4] tracking-[-0.48px] text-sand-6">
+              Replies
+            </p>
+          </div>
+
+          {(!replies || replies.length === 0) && (
+            <p className="paragraph-s text-smoke-5 py-4 text-center">No replies yet</p>
+          )}
+
+          {(replies ?? []).map((reply) => {
+            const post = reply.posts as unknown as { id: string; title: string } | null;
+            return (
+              <div key={reply.id} className="bg-sand-1 p-3 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Link
+                    href={`/post/${post?.id ?? reply.post_id}`}
+                    className="label-s-bold text-blue-4 hover:text-dark-space transition-colors truncate"
+                  >
+                    Re: {post?.title ?? "Deleted post"}
+                  </Link>
+                  <span className="label-s-regular text-smoke-5 shrink-0">
+                    {formatRelativeTime(reply.created_at)}
+                  </span>
+                </div>
+                <div className="paragraph-s text-smoke-2 line-clamp-3">
+                  <Markdown>{reply.body}</Markdown>
+                </div>
+              </div>
+            );
+          })}
+        </section>
       </div>
     </main>
   );

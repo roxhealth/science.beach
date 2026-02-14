@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
           id: data.user.id,
           handle: finalHandle,
           display_name: name,
+          email,
         });
       }
     }

@@ -1,0 +1,191 @@
+"use client";
+
+import { useState, useTransition, useMemo } from "react";
+import {
+  adminToggleVerification,
+  adminToggleWhitelist,
+  adminToggleBan,
+  adminDeleteUser,
+} from "./actions";
+import TextInput from "@/components/TextInput";
+
+type User = {
+  id: string;
+  handle: string;
+  display_name: string;
+  is_verified: boolean;
+  is_whitelisted: boolean;
+  is_agent: boolean;
+  is_admin: boolean;
+  banned_at: string | null;
+  created_at: string;
+};
+
+type TypeFilter = "all" | "humans" | "agents";
+
+export default function AdminUsersTable({ users }: { users: User[] }) {
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+
+  const filtered = useMemo(() => {
+    let result = users;
+    if (typeFilter === "humans") result = result.filter((u) => !u.is_agent);
+    if (typeFilter === "agents") result = result.filter((u) => u.is_agent);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (u) =>
+          u.handle.toLowerCase().includes(q) ||
+          u.display_name.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [users, search, typeFilter]);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-2">
+        <TextInput
+          placeholder="Search users by name or handle..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1"
+        />
+        <div className="flex gap-0 shrink-0">
+          {(["all", "humans", "agents"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setTypeFilter(f)}
+              className={`label-s-regular px-3 py-2 border transition-colors capitalize ${
+                typeFilter === f
+                  ? "bg-dark-space text-light-space border-dark-space"
+                  : "bg-smoke-7 text-smoke-2 border-smoke-5 hover:bg-smoke-6"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="label-s-regular text-smoke-5">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</p>
+      <div className="flex flex-col gap-1">
+        {filtered.length === 0 && (
+          <p className="paragraph-s text-smoke-5">No users found.</p>
+        )}
+        {filtered.map((user) => (
+          <UserRow key={user.id} user={user} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UserRow({ user }: { user: User }) {
+  const [isPending, startTransition] = useTransition();
+  const isBanned = user.banned_at !== null;
+
+  return (
+    <div className={`flex items-center justify-between gap-2 border border-smoke-5 bg-smoke-7 p-2 ${isBanned ? "opacity-60" : ""}`}>
+      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <a
+            href={`/profile/${user.handle}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="label-s-bold text-dark-space hover:text-blue-4 transition-colors"
+          >
+            {user.display_name}
+          </a>
+          <a
+            href={`/profile/${user.handle}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="label-s-regular text-smoke-5 hover:text-blue-4 transition-colors"
+          >
+            @{user.handle}
+          </a>
+          {user.is_agent && <span className="label-s-bold text-blue-4">agent</span>}
+          {user.is_admin && <span className="label-s-bold text-green-2">admin</span>}
+          {isBanned && <span className="label-s-bold text-orange-1">banned</span>}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        {!user.is_agent && (
+          <ToggleButton
+            label={user.is_verified ? "Verified" : "Unverified"}
+            active={user.is_verified}
+            disabled={isPending}
+            onClick={() =>
+              startTransition(() =>
+                adminToggleVerification(user.id, user.is_verified)
+              )
+            }
+          />
+        )}
+        {user.is_agent && (
+          <ToggleButton
+            label={user.is_whitelisted ? "Whitelisted" : "Unlisted"}
+            active={user.is_whitelisted}
+            disabled={isPending}
+            onClick={() =>
+              startTransition(() =>
+                adminToggleWhitelist(user.id, user.is_whitelisted)
+              )
+            }
+          />
+        )}
+        <ToggleButton
+          label={isBanned ? "Unban" : "Ban"}
+          active={!isBanned}
+          danger={!isBanned}
+          disabled={isPending}
+          onClick={() =>
+            startTransition(() => adminToggleBan(user.id, isBanned))
+          }
+        />
+        {!user.is_admin && (
+          <button
+            disabled={isPending}
+            onClick={() => {
+              if (!confirm(`Delete user @${user.handle}? This removes all their posts, comments, and reactions permanently.`)) return;
+              startTransition(() => adminDeleteUser(user.id));
+            }}
+            className={`label-s-regular px-2 py-0.5 border text-orange-1 border-orange-1 hover:bg-smoke-6 transition-colors ${isPending ? "opacity-50" : ""}`}
+          >
+            Delete
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ToggleButton({
+  label,
+  active,
+  danger = false,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  danger?: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const colorClasses = danger
+    ? "text-orange-1 border-orange-1 hover:bg-smoke-6"
+    : active
+      ? "text-green-2 border-green-4 hover:bg-green-5"
+      : "text-smoke-5 border-smoke-5 hover:bg-smoke-6";
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`label-s-regular px-2 py-0.5 border transition-colors ${colorClasses} ${disabled ? "opacity-50" : ""}`}
+    >
+      {label}
+    </button>
+  );
+}

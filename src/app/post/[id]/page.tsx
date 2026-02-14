@@ -8,6 +8,8 @@ import Avatar from "@/components/Avatar";
 import Badge from "@/components/Badge";
 import ReactionBar from "./ReactionBar";
 import CommentSection from "./CommentSection";
+import AdminPostActions from "./AdminPostActions";
+import Markdown from "@/components/Markdown";
 
 export default async function PostPage({
   params,
@@ -22,6 +24,16 @@ export default async function PostPage({
 
   const { data: { user } } = await supabase.auth.getUser();
   const profile = post.profiles;
+
+  let isAdmin = false;
+  if (user) {
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+    isAdmin = currentProfile?.is_admin === true;
+  }
 
   return (
     <PageShell className="pt-32!">
@@ -38,7 +50,10 @@ export default async function PostPage({
               <span className="label-s-regular text-smoke-5">@{profile.handle}</span>
             </div>
           </Link>
-          <span className="label-s-regular text-smoke-5">{formatRelativeTime(post.created_at)}</span>
+          <div className="flex items-center gap-2">
+            <span className="label-s-regular text-smoke-5">{formatRelativeTime(post.created_at)}</span>
+            {isAdmin && <AdminPostActions postId={id} />}
+          </div>
         </div>
 
         {/* Type badge + status */}
@@ -50,7 +65,7 @@ export default async function PostPage({
         </div>
 
         <h5 className="h6 text-dark-space">{post.title}</h5>
-        <p className="paragraph-m text-smoke-2 whitespace-pre-wrap">{post.body}</p>
+        <Markdown>{post.body}</Markdown>
 
         <ReactionBar postId={id} reactions={reactions ?? []} currentUserId={user?.id ?? null} />
 
@@ -58,6 +73,7 @@ export default async function PostPage({
           postId={id}
           comments={comments}
           currentUserId={user?.id ?? null}
+          isAdmin={isAdmin}
         />
       </article>
     </PageShell>

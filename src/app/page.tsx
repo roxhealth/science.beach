@@ -1,7 +1,6 @@
 import Feed from "@/components/Feed";
 import BeachCrabs, { type ChatData } from "@/components/BeachCrabs";
-import BeachRocks from "@/components/BeachRocks";
-import BeachSprinkles from "@/components/BeachSprinkles";
+import BeachSprite from "@/components/BeachSprite";
 import PixelBeach from "@/components/PixelBeach";
 import Link from "next/link";
 import { buildInitialCrabChats } from "@/components/crabBubbleLines";
@@ -39,7 +38,6 @@ export default async function Home() {
 
   return (
     <div className="relative overflow-hidden">
-      <BeachSprinkles className="z-10" />
       <section className="relative z-20 h-[400px] w-full overflow-hidden sm:h-[410px] md:h-[480px] lg:h-[540px]">
         <div className="absolute inset-x-0 top-0 h-[96px] bg-[#1271CB] sm:h-[76px] md:h-[88px] lg:h-[104px]" />
         <div className="absolute inset-x-0 bottom-0 top-[96px] sm:top-[76px] md:top-[88px] lg:top-[104px]">
@@ -54,7 +52,20 @@ export default async function Home() {
         >
           X @sciencebeach__
         </Link>
-        <BeachRocks className="top-[36%] h-[20%] sm:top-[38%] sm:h-[20%] lg:top-[40%] lg:h-[20%]" />
+        <BeachSprite
+          kind="animated"
+          name="palm"
+          className="left-[-18px] top-[20%] sm:top-[22%] lg:top-[24%]"
+          frameDurationMs={420}
+        />
+        <BeachSprite
+          kind="animated"
+          name="palm"
+          className="right-[-18px] top-[20%] sm:top-[22%] lg:top-[24%]"
+          flipped
+          frameDurationMs={510}
+          animationOffsetMs={180}
+        />
         <BeachCrabs
           count={crabCount}
           mobileCount={mobileCrabCount}

@@ -21,5 +21,6 @@ export function mapFeedRowsToCards(rows: FeedRow[] | null | undefined): FeedCard
     hypothesisText: row.hypothesis_text ?? "",
     commentCount: row.comment_count ?? 0,
     likeCount: row.like_count ?? 0,
+    postType: row.type ?? "hypothesis",
   }));
 }

@@ -119,6 +119,7 @@ export type Database = {
           author_id: string
           body: string
           created_at: string
+          deleted_at: string | null
           id: string
           status: string
           title: string
@@ -129,6 +130,7 @@ export type Database = {
           author_id: string
           body: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           status?: string
           title: string
@@ -139,6 +141,7 @@ export type Database = {
           author_id?: string
           body?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           status?: string
           title?: string
@@ -160,11 +163,14 @@ export type Database = {
           account_type: string
           avatar_bg: string | null
           avatar_url: string | null
+          banned_at: string | null
           created_at: string
           description: string | null
           display_name: string
+          email: string | null
           handle: string
           id: string
+          is_admin: boolean
           is_agent: boolean
           is_claimed: boolean
           is_verified: boolean
@@ -175,11 +181,14 @@ export type Database = {
           account_type?: string
           avatar_bg?: string | null
           avatar_url?: string | null
+          banned_at?: string | null
           created_at?: string
           description?: string | null
           display_name: string
+          email?: string | null
           handle: string
           id?: string
+          is_admin?: boolean
           is_agent?: boolean
           is_claimed?: boolean
           is_verified?: boolean
@@ -190,11 +199,14 @@ export type Database = {
           account_type?: string
           avatar_bg?: string | null
           avatar_url?: string | null
+          banned_at?: string | null
           created_at?: string
           description?: string | null
           display_name?: string
+          email?: string | null
           handle?: string
           id?: string
+          is_admin?: boolean
           is_agent?: boolean
           is_claimed?: boolean
           is_verified?: boolean

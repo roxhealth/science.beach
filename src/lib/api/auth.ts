@@ -87,5 +87,16 @@ export async function authenticateAgent(
     };
   }
 
+  if (profile.banned_at) {
+    return {
+      error: NextResponse.json(
+        { error: "Account has been suspended" },
+        { status: 403 }
+      ),
+      profile: null,
+      supabase: null,
+    };
+  }
+
   return { error: null, profile, supabase };
 }

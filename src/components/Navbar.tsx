@@ -9,11 +9,11 @@ export default async function Navbar() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let profile: { handle: string; display_name: string } | null = null;
+  let profile: { handle: string; display_name: string; is_admin: boolean } | null = null;
   if (user) {
     const { data } = await supabase
       .from("profiles")
-      .select("handle, display_name")
+      .select("handle, display_name, is_admin")
       .eq("id", user.id)
       .single();
     profile = data;
@@ -47,6 +47,19 @@ export default async function Navbar() {
                 {profile.display_name}
               </span>
             </Link>
+            {profile.is_admin && (
+              <Link href="/admin">
+                <PixelButton
+                  bg="orange-1"
+                  textColor="light-space"
+                  shadowColor="smoke-5"
+                  textShadowTop="smoke-5"
+                  textShadowBottom="smoke-7"
+                >
+                  Admin
+                </PixelButton>
+              </Link>
+            )}
             <form action="/auth/signout" method="POST">
               <PixelButton
                 type="submit"

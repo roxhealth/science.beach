@@ -18,6 +18,13 @@ export async function createComment(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  const { data: commentProfile } = await supabase
+    .from("profiles")
+    .select("banned_at")
+    .eq("id", user.id)
+    .single();
+  if (commentProfile?.banned_at) throw new Error("Your account has been suspended");
+
   const rateLimit = await checkCommentRateLimit(supabase, user.id);
   if (!rateLimit.allowed) {
     throw new Error(
@@ -51,11 +58,23 @@ export async function deleteComment(commentId: string, postId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  const query = supabase
     .from("comments")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", commentId)
-    .eq("author_id", user.id);
+    .eq("id", commentId);
+
+  // Admins can delete any comment; regular users only their own
+  if (!profile?.is_admin) {
+    query.eq("author_id", user.id);
+  }
+
+  const { error } = await query;
   if (error) {
     throw new Error(error.message);
   }
