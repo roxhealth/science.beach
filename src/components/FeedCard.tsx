@@ -7,6 +7,7 @@ import { useUser } from "@/lib/hooks/useUser";
 import Icon from "./Icon";
 import Avatar from "./Avatar";
 import Markdown from "./Markdown";
+import ShareButton from "./ShareButton";
 
 export type FeedCardProps = {
   username: string;
@@ -112,6 +113,7 @@ export default function FeedCard({
           </span>
           {optimisticCount}
         </button>
+        <ShareButton path={`/post/${id}`} />
       </div>
     </article>
   );

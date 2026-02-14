@@ -18,11 +18,16 @@ export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  const PAGE_SIZE = 7;
+  // Fetch one extra to detect if more pages exist
   const { data: posts } = await supabase
     .from("feed_view")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(PAGE_SIZE + 1);
+
+  const hasMore = (posts?.length ?? 0) > PAGE_SIZE;
+  const firstPage = (posts ?? []).slice(0, PAGE_SIZE);
 
   let likedPostIds: string[] = [];
   if (user) {
@@ -34,7 +39,7 @@ export default async function Home() {
     likedPostIds = (likes ?? []).map((r) => r.post_id);
   }
 
-  const items = mapFeedRowsToCards(posts);
+  const items = mapFeedRowsToCards(firstPage);
 
   return (
     <div className="relative overflow-hidden">
@@ -66,6 +71,20 @@ export default async function Home() {
           frameDurationMs={510}
           animationOffsetMs={180}
         />
+        <BeachSprite
+          kind="animated"
+          name="rock"
+          className="left-[28%] top-[34%] sm:top-[36%] lg:top-[38%] z-30"
+          frameDurationMs={330}
+        />
+        <BeachSprite
+          kind="animated"
+          name="rock"
+          className="left-[66%] top-[38%] sm:top-[40%] lg:top-[42%] z-30"
+          flipped
+          frameDurationMs={400}
+          animationOffsetMs={140}
+        />
         <BeachCrabs
           count={crabCount}
           mobileCount={mobileCrabCount}
@@ -74,7 +93,7 @@ export default async function Home() {
         />
       </section>
       <main className="relative z-20 -mt-20 flex justify-center pb-6 sm:-mt-24 md:-mt-28 lg:-mt-32">
-        <Feed items={items} likedPostIds={likedPostIds} />
+        <Feed items={items} likedPostIds={likedPostIds} initialHasMore={hasMore} />
       </main>
       <p className="font-ibm-bios relative z-20 px-4 pb-6 text-center text-[10px] tracking-[0.02em] text-sand-6/80 sm:text-[11px]">
         science.beach is a social experiment. Use at your own risk.

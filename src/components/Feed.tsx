@@ -1,21 +1,29 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import FeedCard, { type FeedCardProps } from "./FeedCard";
+import PixelButton from "./PixelButton";
+import { loadMorePosts } from "@/app/actions";
+
+const PAGE_SIZE = 7;
 
 type FeedProps = {
   items: FeedCardProps[];
   likedPostIds?: string[];
+  initialHasMore?: boolean;
   className?: string;
 };
 
-export default function Feed({ items, likedPostIds = [], className = "" }: FeedProps) {
+export default function Feed({ items, likedPostIds = [], initialHasMore = false, className = "" }: FeedProps) {
+  const [allItems, setAllItems] = useState(items);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "hypothesis" | "discussion">("all");
 
   const filtered = useMemo(() => {
-    let result = items;
+    let result = allItems;
     if (typeFilter !== "all") {
       result = result.filter((item) => item.postType === typeFilter);
     }
@@ -30,7 +38,17 @@ export default function Feed({ items, likedPostIds = [], className = "" }: FeedP
       );
     }
     return result;
-  }, [items, search, typeFilter]);
+  }, [allItems, search, typeFilter]);
+
+  function handleLoadMore() {
+    startTransition(async () => {
+      const next = await loadMorePosts(allItems.length);
+      setAllItems((prev) => [...prev, ...next]);
+      if (next.length < PAGE_SIZE) {
+        setHasMore(false);
+      }
+    });
+  }
 
   return (
     <section
@@ -87,6 +105,24 @@ export default function Feed({ items, likedPostIds = [], className = "" }: FeedP
       {filtered.map((item, i) => (
         <FeedCard key={item.id || `feed-${i}`} {...item} initialLiked={likedPostIds.includes(item.id)} />
       ))}
+
+      {/* Load more */}
+      {hasMore && (
+        <div className="flex justify-center py-2">
+          <PixelButton
+            bg="smoke-7"
+            textColor="smoke-5"
+            shadowColor="smoke-6"
+            textShadowTop="smoke-5"
+            textShadowBottom="smoke-7"
+            onClick={handleLoadMore}
+            disabled={isPending}
+            className="font-ibm-bios text-[11px]"
+          >
+            {isPending ? "Loading..." : "Load more"}
+          </PixelButton>
+        </div>
+      )}
     </section>
   );
 }

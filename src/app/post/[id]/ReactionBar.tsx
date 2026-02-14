@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { toggleReaction } from "./actions";
 import Icon from "@/components/Icon";
+import ShareButton from "@/components/ShareButton";
 
 type Props = {
   postId: string;
@@ -47,6 +48,7 @@ export default function ReactionBar({
         </span>
         {likeCount} {likeCount === 1 ? "like" : "likes"}
       </button>
+      <ShareButton path={`/post/${postId}`} />
     </div>
   );
 }

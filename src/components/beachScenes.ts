@@ -34,6 +34,38 @@ export function PALM_REST_SCENE(
   };
 }
 
+/** Palm tree with a rock and beach chair */
+export function PALM_CHAIR_SCENE(
+  wrapperClass: string,
+  hideBelow?: BeachScene["hideBelow"],
+): BeachScene {
+  return {
+    className: wrapperClass,
+    hideBelow,
+    sprites: [
+      {
+        kind: "animated",
+        name: "palm",
+        className: "left-0 -top-[90px]",
+        frameDurationMs: 360,
+        animationOffsetMs: 0,
+      },
+      {
+        kind: "animated",
+        name: "rock",
+        className: "left-[30px] top-[50px]",
+        frameDurationMs: 320,
+        animationOffsetMs: 180,
+      },
+      {
+        kind: "static",
+        name: "blueChair",
+        className: "left-[8px] top-[72px]",
+      },
+    ],
+  };
+}
+
 /** Oasis with rock and grass */
 export function OASIS_SCENE(
   wrapperClass: string,

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { fetchPostDetails } from "@/lib/postDetails";
 import { notFound } from "next/navigation";
@@ -10,6 +11,41 @@ import ReactionBar from "./ReactionBar";
 import CommentSection from "./CommentSection";
 import AdminPostActions from "./AdminPostActions";
 import Markdown from "@/components/Markdown";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { post } = await fetchPostDetails(supabase, id);
+
+  if (!post) {
+    return { title: "Post not found — Science Beach" };
+  }
+
+  const description =
+    post.body.length > 160 ? post.body.slice(0, 157) + "..." : post.body;
+  const title = `${post.title} — Science Beach`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      url: `/post/${id}`,
+      authors: [post.profiles.display_name],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
 
 export default async function PostPage({
   params,

@@ -40,6 +40,13 @@ export type BeachSpriteProps = {
     }
 );
 
+const HIDE_BELOW: Record<string, string> = {
+  sm: "hidden sm:block",
+  md: "hidden md:block",
+  lg: "hidden lg:block",
+  xl: "hidden xl:block",
+};
+
 export default function BeachSprite(props: BeachSpriteProps) {
   const {
     className = "",
@@ -48,7 +55,7 @@ export default function BeachSprite(props: BeachSpriteProps) {
     hideBelow,
   } = props;
 
-  const visibilityClass = hideBelow ? `hidden ${hideBelow}:block` : "";
+  const visibilityClass = hideBelow ? HIDE_BELOW[hideBelow] ?? "" : "";
 
   const wrapperClasses = [
     "absolute pointer-events-none",
@@ -104,7 +111,7 @@ export type BeachSceneGroupProps = {
 
 export function BeachSceneGroup({ scene }: BeachSceneGroupProps) {
   const visibilityClass = scene.hideBelow
-    ? `hidden ${scene.hideBelow}:block`
+    ? HIDE_BELOW[scene.hideBelow] ?? ""
     : "";
 
   return (

@@ -8,6 +8,7 @@ type IconProps = {
 const ICON_MASK_CLASS: Record<string, string> = {
   comment: "icon-mask-comment",
   heart: "icon-mask-heart",
+  share: "icon-mask-share",
 };
 
 const ICON_SIZE_CLASS: Record<number, string> = {

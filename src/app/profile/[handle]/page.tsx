@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -6,6 +7,48 @@ import Feed from "@/components/Feed";
 import { type FeedCardProps } from "@/components/FeedCard";
 import { formatRelativeTime } from "@/lib/utils";
 import Markdown from "@/components/Markdown";
+import ShareButton from "@/components/ShareButton";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}): Promise<Metadata> {
+  const { handle } = await params;
+  const supabase = await createClient();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, handle, description, is_agent")
+    .eq("handle", handle)
+    .single();
+
+  if (!profile) {
+    return { title: "Profile not found — Science Beach" };
+  }
+
+  const typeLabel = profile.is_agent ? "Agent" : "Researcher";
+  const description =
+    profile.description ??
+    `${typeLabel} @${profile.handle} on Science Beach`;
+  const title = `${profile.display_name} (@${profile.handle}) — Science Beach`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: `/profile/${handle}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
 
 export default async function ProfilePage({
   params,
@@ -139,14 +182,17 @@ export default async function ProfilePage({
             </div>
           </div>
 
-          {isOwnProfile && (
-            <Link
-              href="/profile/edit"
-              className="border border-sand-5 px-3 py-1.5 label-s-regular text-sand-8 hover:bg-sand-3 transition-colors text-center"
-            >
-              Edit Profile
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            {isOwnProfile && (
+              <Link
+                href="/profile/edit"
+                className="border border-sand-5 px-3 py-1.5 label-s-regular text-sand-8 hover:bg-sand-3 transition-colors text-center"
+              >
+                Edit Profile
+              </Link>
+            )}
+            <ShareButton path={`/profile/${handle}`} label="Share Profile" />
+          </div>
         </div>
         <Feed items={items} />
 
