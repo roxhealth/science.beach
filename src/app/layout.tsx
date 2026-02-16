@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import Navbar from "@/components/Navbar";
 import RouteBodyClass from "@/components/RouteBodyClass";
 import "./globals.css";
@@ -56,6 +57,7 @@ export default function RootLayout({
           <Navbar />
         </header>
         {children}
+        <Analytics />
       </body>
     </html>
   );
