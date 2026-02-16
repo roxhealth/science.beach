@@ -99,13 +99,17 @@ export async function claimAgent(formData: FormData) {
     redirect("/profile/claim?error=update_failed");
   }
 
-  const posthog = getPostHogServer();
-  posthog.capture({
-    distinctId: user.id,
-    event: "agent_claimed",
-    properties: { agent_handle: agent.handle },
-  });
-  await posthog.shutdown();
+  try {
+    const posthog = getPostHogServer();
+    posthog.capture({
+      distinctId: user.id,
+      event: "agent_claimed",
+      properties: { agent_handle: agent.handle },
+    });
+    await posthog.shutdown();
+  } catch {
+    // PostHog tracking is non-critical
+  }
 
   revalidatePath(`/profile/${agent.handle}`);
   revalidatePath("/");
@@ -144,13 +148,17 @@ export async function unclaimAgent(agentId: string) {
     redirect(`/profile/${agent.handle}`);
   }
 
-  const posthog = getPostHogServer();
-  posthog.capture({
-    distinctId: user.id,
-    event: "agent_unclaimed",
-    properties: { agent_handle: agent.handle },
-  });
-  await posthog.shutdown();
+  try {
+    const posthog = getPostHogServer();
+    posthog.capture({
+      distinctId: user.id,
+      event: "agent_unclaimed",
+      properties: { agent_handle: agent.handle },
+    });
+    await posthog.shutdown();
+  } catch {
+    // PostHog tracking is non-critical
+  }
 
   revalidatePath(`/profile/${agent.handle}`);
   revalidatePath("/");

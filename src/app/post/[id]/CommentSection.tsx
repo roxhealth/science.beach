@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { createComment, deleteComment } from "./actions";
 import { formatRelativeTime } from "@/lib/utils";
 import Avatar from "@/components/Avatar";
@@ -83,6 +83,7 @@ function CommentNode({
 function ReplyForm({ postId, parentId }: { postId: string; parentId: string | null }) {
   const formRef = useRef<HTMLFormElement>(null);
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <details ref={detailsRef} className="group">
@@ -90,7 +91,12 @@ function ReplyForm({ postId, parentId }: { postId: string; parentId: string | nu
       <form
         ref={formRef}
         action={async (formData) => {
-          await createComment(formData);
+          setError(null);
+          const result = await createComment(formData);
+          if (result?.error) {
+            setError(result.error);
+            return;
+          }
           formRef.current?.reset();
           if (detailsRef.current) detailsRef.current.open = false;
         }}
@@ -99,6 +105,7 @@ function ReplyForm({ postId, parentId }: { postId: string; parentId: string | nu
         <input type="hidden" name="post_id" value={postId} />
         {parentId && <input type="hidden" name="parent_id" value={parentId} />}
         <TextArea compact name="body" required rows={2} maxLength={5000} placeholder="Write a reply..." />
+        {error && <p className="label-s-regular text-orange-1">{error}</p>}
         <PixelButton type="submit" bg="blue-4" textColor="light-space" shadowColor="blue-2" textShadowTop="blue-2" textShadowBottom="blue-5" className="self-start">
           Reply
         </PixelButton>
@@ -110,6 +117,7 @@ function ReplyForm({ postId, parentId }: { postId: string; parentId: string | nu
 export default function CommentSection({ postId, comments, currentUserId, isAdmin }: Props) {
   const tree = buildTree(comments);
   const formRef = useRef<HTMLFormElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <section className="flex flex-col gap-2">
@@ -118,11 +126,20 @@ export default function CommentSection({ postId, comments, currentUserId, isAdmi
       {currentUserId ? (
         <form
           ref={formRef}
-          action={async (formData) => { await createComment(formData); formRef.current?.reset(); }}
+          action={async (formData) => {
+            setError(null);
+            const result = await createComment(formData);
+            if (result?.error) {
+              setError(result.error);
+              return;
+            }
+            formRef.current?.reset();
+          }}
           className="flex flex-col gap-2 border border-smoke-5 bg-smoke-6 p-3"
         >
           <input type="hidden" name="post_id" value={postId} />
           <TextArea compact name="body" required rows={3} maxLength={5000} placeholder="Add a comment..." className="bg-smoke-7" />
+          {error && <p className="label-s-regular text-orange-1">{error}</p>}
           <PixelButton type="submit" bg="green-4" textColor="green-2" shadowColor="green-2" textShadowTop="green-3" textShadowBottom="green-5" className="self-start">
             Comment
           </PixelButton>

@@ -12,32 +12,34 @@ const CommentSchema = z.object({
   parent_id: z.string().uuid().nullable(),
 });
 
-export async function createComment(formData: FormData) {
+export async function createComment(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user) return { error: "Not authenticated" };
 
   const { data: commentProfile } = await supabase
     .from("profiles")
     .select("banned_at")
     .eq("id", user.id)
     .single();
-  if (commentProfile?.banned_at) throw new Error("Your account has been suspended");
+  if (commentProfile?.banned_at) return { error: "Your account has been suspended" };
 
   const rateLimit = await checkCommentRateLimit(supabase, user.id);
   if (!rateLimit.allowed) {
-    throw new Error(
-      `Rate limit exceeded. Try again in ${rateLimit.retryAfterSeconds} seconds.`
-    );
+    return {
+      error: `Rate limit exceeded. Try again in ${rateLimit.retryAfterSeconds} seconds.`,
+    };
   }
 
-  const parsed = CommentSchema.parse({
+  const result = CommentSchema.safeParse({
     post_id: formData.get("post_id"),
     body: formData.get("body"),
     parent_id: formData.get("parent_id") || null,
   });
+  if (!result.success) return { error: "Invalid comment data" };
+  const parsed = result.data;
 
   const { error } = await supabase.from("comments").insert({
     post_id: parsed.post_id,
@@ -46,18 +48,23 @@ export async function createComment(formData: FormData) {
     body: parsed.body,
   });
   if (error) {
-    throw new Error(error.message);
+    return { error: error.message };
   }
 
-  const posthog = getPostHogServer();
-  posthog.capture({
-    distinctId: user.id,
-    event: "comment_created",
-    properties: { post_id: parsed.post_id, is_reply: !!parsed.parent_id },
-  });
-  await posthog.shutdown();
+  try {
+    const posthog = getPostHogServer();
+    posthog.capture({
+      distinctId: user.id,
+      event: "comment_created",
+      properties: { post_id: parsed.post_id, is_reply: !!parsed.parent_id },
+    });
+    await posthog.shutdown();
+  } catch {
+    // PostHog tracking is non-critical — don't break the user flow
+  }
 
   revalidatePath(`/post/${parsed.post_id}`);
+  return {};
 }
 
 export async function deleteComment(commentId: string, postId: string) {
@@ -124,13 +131,17 @@ export async function toggleReaction(postId: string) {
       throw new Error(error.message);
     }
 
-    const posthog = getPostHogServer();
-    posthog.capture({
-      distinctId: user.id,
-      event: "post_liked",
-      properties: { post_id: postId },
-    });
-    await posthog.shutdown();
+    try {
+      const posthog = getPostHogServer();
+      posthog.capture({
+        distinctId: user.id,
+        event: "post_liked",
+        properties: { post_id: postId },
+      });
+      await posthog.shutdown();
+    } catch {
+      // PostHog tracking is non-critical
+    }
   }
 
   revalidatePath(`/post/${postId}`);

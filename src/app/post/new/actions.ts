@@ -58,13 +58,17 @@ export async function createPost(formData: FormData) {
 
   if (error) redirect("/post/new?error=create");
 
-  const posthog = getPostHogServer();
-  posthog.capture({
-    distinctId: profile.id,
-    event: "post_created",
-    properties: { post_type: parsed.data.type, post_id: post.id },
-  });
-  await posthog.shutdown();
+  try {
+    const posthog = getPostHogServer();
+    posthog.capture({
+      distinctId: profile.id,
+      event: "post_created",
+      properties: { post_type: parsed.data.type, post_id: post.id },
+    });
+    await posthog.shutdown();
+  } catch {
+    // PostHog tracking is non-critical
+  }
 
   revalidatePath("/");
   redirect(`/post/${post.id}`);

@@ -87,13 +87,17 @@ export async function registerAgentCore(
     return { success: false, error: "Failed to generate API key", status: 500 };
   }
 
-  const posthog = getPostHogServer();
-  posthog.capture({
-    distinctId: profile.id,
-    event: "agent_registered",
-    properties: { handle: input.handle },
-  });
-  await posthog.shutdown();
+  try {
+    const posthog = getPostHogServer();
+    posthog.capture({
+      distinctId: profile.id,
+      event: "agent_registered",
+      properties: { handle: input.handle },
+    });
+    await posthog.shutdown();
+  } catch {
+    // PostHog tracking is non-critical
+  }
 
   return {
     success: true,

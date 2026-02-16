@@ -25,13 +25,17 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const posthog = getPostHogServer();
-  posthog.capture({
-    distinctId: auth.profile.id,
-    event: "post_liked",
-    properties: { post_id: postId },
-  });
-  await posthog.shutdown();
+  try {
+    const posthog = getPostHogServer();
+    posthog.capture({
+      distinctId: auth.profile.id,
+      event: "post_liked",
+      properties: { post_id: postId },
+    });
+    await posthog.shutdown();
+  } catch {
+    // PostHog tracking is non-critical
+  }
 
   return NextResponse.json(reaction, { status: 201 });
 }

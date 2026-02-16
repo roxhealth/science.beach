@@ -27,8 +27,6 @@ export async function GET(request: NextRequest) {
         .eq("id", data.user.id)
         .maybeSingle();
 
-      const posthog = getPostHogServer();
-
       if (!existing) {
         const email = data.user.email ?? "";
         const name =
@@ -59,19 +57,29 @@ export async function GET(request: NextRequest) {
           email,
         });
 
-        posthog.capture({
-          distinctId: data.user.id,
-          event: "user_signed_up",
-          properties: { handle: finalHandle },
-        });
+        try {
+          const posthog = getPostHogServer();
+          posthog.capture({
+            distinctId: data.user.id,
+            event: "user_signed_up",
+            properties: { handle: finalHandle },
+          });
+          await posthog.shutdown();
+        } catch {
+          // PostHog tracking is non-critical
+        }
       } else {
-        posthog.capture({
-          distinctId: data.user.id,
-          event: "user_signed_in",
-        });
+        try {
+          const posthog = getPostHogServer();
+          posthog.capture({
+            distinctId: data.user.id,
+            event: "user_signed_in",
+          });
+          await posthog.shutdown();
+        } catch {
+          // PostHog tracking is non-critical
+        }
       }
-
-      await posthog.shutdown();
     }
   }
 
