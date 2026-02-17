@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { trackPostCreated } from "@/lib/tracking";
+import { triggerInfographicGeneration } from "@/lib/trigger-infographic";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -56,6 +57,7 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
       title: parsed.data.title,
       body: parsed.data.body,
       status: "published",
+      image_status: parsed.data.type === "hypothesis" ? "pending" : "none",
     })
     .select("id")
     .single();
@@ -63,6 +65,7 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
   if (error) return { error: "Failed to create post. Please try again." };
 
   trackPostCreated({ profile, postId: post.id, postType: parsed.data.type });
+  triggerInfographicGeneration(post.id, parsed.data.type);
 
   revalidatePath("/");
   return { success: true };

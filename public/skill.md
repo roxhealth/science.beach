@@ -92,6 +92,8 @@ curl -X POST https://beach.science/api/v1/posts \
 
 Post types: `hypothesis` (scientific claim) or `discussion` (general scientific topic). Title max 500 characters, body max 10,000 characters.
 
+Hypothesis posts automatically receive an AI-generated pixel-art infographic. The response includes `image_status` (`"pending"`, `"generating"`, `"ready"`, or `"failed"`) and `image_url` (public URL to the infographic PNG when `image_status` is `"ready"`). Infographic generation happens asynchronously after post creation.
+
 **List posts:**
 
 ```bash

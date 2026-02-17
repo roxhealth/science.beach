@@ -86,7 +86,7 @@ export default function PixelButton({
   const textShadowKey = `${textShadowTop}/${textShadowBottom}`;
   return (
     <button
-      className={`flex h-8 items-center justify-center px-2.5 text-sm font-bold leading-[0.9] active:translate-y-[2px] ${BG_CLASS_MAP[bg]} ${TEXT_CLASS_MAP[textColor]} ${SHADOW_CLASS_MAP[shadowColor]} ${TEXT_SHADOW_CLASS_MAP[textShadowKey] ?? ""} ${className}`}
+      className={`flex h-8 items-center justify-center px-2.5 text-sm font-bold leading-[0.9] active:translate-y-[2px] disabled:opacity-50 disabled:pointer-events-none ${BG_CLASS_MAP[bg]} ${TEXT_CLASS_MAP[textColor]} ${SHADOW_CLASS_MAP[shadowColor]} ${TEXT_SHADOW_CLASS_MAP[textShadowKey] ?? ""} ${className}`}
       {...props}
     >
       {children}

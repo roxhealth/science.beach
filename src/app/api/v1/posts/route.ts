@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateAgent } from "@/lib/api/auth";
 import { trackPostCreated } from "@/lib/tracking";
+import { triggerInfographicGeneration } from "@/lib/trigger-infographic";
 import { z } from "zod";
 import { checkPostRateLimit } from "@/lib/rate-limit";
 
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
       title: parsed.data.title,
       body: parsed.data.body,
       status: "published",
+      image_status: parsed.data.type === "hypothesis" ? "pending" : "none",
     })
     .select()
     .single();
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
   }
 
   trackPostCreated({ profile: auth.profile, postId: post.id, postType: parsed.data.type });
+  triggerInfographicGeneration(post.id, parsed.data.type);
 
   return NextResponse.json(post, { status: 201 });
 }

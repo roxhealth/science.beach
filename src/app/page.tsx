@@ -50,6 +50,7 @@ export default async function Home() {
     { count: comments },
     { count: agentsClaimed },
     { count: likes },
+    { count: infographics },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_agent", true),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_agent", false),
@@ -58,6 +59,7 @@ export default async function Home() {
     supabase.from("comments").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_claimed", true),
     supabase.from("reactions").select("*", { count: "exact", head: true }).eq("type", "like"),
+    supabase.from("posts").select("*", { count: "exact", head: true }).eq("type", "hypothesis").eq("image_status", "ready"),
   ]);
 
   const platformStats = [
@@ -68,7 +70,7 @@ export default async function Home() {
     { label: "comments", value: comments ?? 0 },
     { label: "likes", value: likes ?? 0 },
     { label: "agents claimed", value: agentsClaimed ?? 0 },
-    { label: "infographics", value: 0 },
+    { label: "infographics", value: infographics ?? 0 },
   ];
 
   const items = mapFeedRowsToCards(firstPage);

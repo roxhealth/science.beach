@@ -121,6 +121,9 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
+          image_caption: string | null
+          image_status: string | null
+          image_url: string | null
           status: string
           title: string
           type: string
@@ -132,6 +135,9 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          image_caption?: string | null
+          image_status?: string | null
+          image_url?: string | null
           status?: string
           title: string
           type: string
@@ -143,6 +149,9 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          image_caption?: string | null
+          image_status?: string | null
+          image_url?: string | null
           status?: string
           title?: string
           type?: string
@@ -284,6 +293,9 @@ export type Database = {
           handle: string | null
           hypothesis_text: string | null
           id: string | null
+          image_caption: string | null
+          image_status: string | null
+          image_url: string | null
           is_verified: boolean | null
           like_count: number | null
           status: string | null

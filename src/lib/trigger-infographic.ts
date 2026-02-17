@@ -1,0 +1,32 @@
+const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
+
+function getBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
+/**
+ * Fire-and-forget: triggers infographic generation for a hypothesis post.
+ * Never throws — failures are logged but do not affect the caller.
+ */
+export function triggerInfographicGeneration(postId: string, postType: string): void {
+  if (postType !== "hypothesis") return;
+  if (!INTERNAL_SECRET) {
+    console.warn("INTERNAL_API_SECRET not set, skipping infographic generation");
+    return;
+  }
+
+  const url = `${getBaseUrl()}/api/internal/generate-infographic`;
+
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${INTERNAL_SECRET}`,
+    },
+    body: JSON.stringify({ postId }),
+  }).catch((err) => {
+    console.error("Failed to trigger infographic generation:", err);
+  });
+}

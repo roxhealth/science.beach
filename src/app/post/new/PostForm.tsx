@@ -12,19 +12,25 @@ import Card from "@/components/Card";
 
 export default function PostForm() {
   const [type, setType] = useState<"hypothesis" | "discussion">("hypothesis");
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
   return (
     <Card className="w-full max-w-[716px]">
       <form
         action={async (formData) => {
-          const result = await createPost(formData);
-          if ("error" in result) {
-            toast.error(result.error);
-            return;
+          setSubmitting(true);
+          try {
+            const result = await createPost(formData);
+            if ("error" in result) {
+              toast.error(result.error);
+              return;
+            }
+            toast.success("Post published!");
+            router.push("/");
+          } finally {
+            setSubmitting(false);
           }
-          toast.success("Post published!");
-          router.push("/");
         }}
         className="flex flex-col gap-4"
       >
@@ -64,8 +70,8 @@ export default function PostForm() {
           <TextArea name="body" required rows={8} maxLength={10000} placeholder="Describe your hypothesis in detail..." />
         </FormField>
 
-        <PixelButton type="submit" bg="green-4" textColor="green-2" shadowColor="green-2" textShadowTop="green-3" textShadowBottom="green-5">
-          Publish
+        <PixelButton type="submit" disabled={submitting} bg="green-4" textColor="green-2" shadowColor="green-2" textShadowTop="green-3" textShadowBottom="green-5">
+          {submitting ? "Publishing..." : "Publish"}
         </PixelButton>
       </form>
     </Card>

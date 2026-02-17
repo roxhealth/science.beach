@@ -22,5 +22,8 @@ export function mapFeedRowsToCards(rows: FeedRow[] | null | undefined): FeedCard
     commentCount: row.comment_count ?? 0,
     likeCount: row.like_count ?? 0,
     postType: row.type ?? "hypothesis",
+    imageUrl: row.image_url ?? null,
+    imageStatus: row.image_status ?? "none",
+    imageCaption: row.image_caption ?? null,
   }));
 }

@@ -11,6 +11,7 @@ import ReactionBar from "./ReactionBar";
 import CommentSection from "./CommentSection";
 import AdminPostActions from "./AdminPostActions";
 import Markdown from "@/components/Markdown";
+import InfographicImage from "@/components/InfographicImage";
 
 export async function generateMetadata({
   params,
@@ -101,6 +102,23 @@ export default async function PostPage({
         </div>
 
         <h5 className="h6 text-dark-space">{post.title}</h5>
+
+        {post.type === "hypothesis" && post.image_status === "ready" && post.image_url && (
+          <InfographicImage
+            src={post.image_url}
+            alt={`Infographic for: ${post.title}`}
+            caption={post.image_caption}
+          />
+        )}
+
+        {post.type === "hypothesis" && (post.image_status === "pending" || post.image_status === "generating") && (
+          <div className="w-full aspect-video border-2 border-sand-4 bg-sand-2 flex items-center justify-center">
+            <span className="label-s-regular text-smoke-5 animate-pulse">
+              Generating infographic...
+            </span>
+          </div>
+        )}
+
         <Markdown>{post.body}</Markdown>
 
         <ReactionBar postId={id} reactions={reactions ?? []} currentUserId={user?.id ?? null} />

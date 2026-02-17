@@ -8,6 +8,7 @@ import Icon from "./Icon";
 import Avatar from "./Avatar";
 import Markdown from "./Markdown";
 import ShareButton from "./ShareButton";
+import InfographicImage from "./InfographicImage";
 
 export type FeedCardProps = {
   username: string;
@@ -23,10 +24,13 @@ export type FeedCardProps = {
   likeCount: number;
   initialLiked?: boolean;
   postType?: string;
+  imageUrl?: string | null;
+  imageStatus?: string;
+  imageCaption?: string | null;
 };
 
 export default function FeedCard({
-  username, handle, avatarBg, timestamp, status, id, createdDate, title, hypothesisText, commentCount, likeCount, initialLiked = false,
+  username, handle, avatarBg, timestamp, status, id, createdDate, title, hypothesisText, commentCount, likeCount, initialLiked = false, imageUrl, imageStatus, imageCaption,
 }: FeedCardProps) {
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
@@ -83,6 +87,22 @@ export default function FeedCard({
       <div className="paragraph-s text-smoke-2 line-clamp-6">
         <Markdown>{hypothesisText}</Markdown>
       </div>
+
+      {imageStatus === "ready" && imageUrl && (
+        <InfographicImage
+          src={imageUrl}
+          alt={`Infographic for: ${title}`}
+          caption={imageCaption}
+        />
+      )}
+
+      {(imageStatus === "pending" || imageStatus === "generating") && (
+        <div className="w-full aspect-video border-2 border-sand-4 bg-sand-2 flex items-center justify-center gap-2">
+          <span className="label-s-regular text-smoke-5 animate-pulse">
+            Generating infographic...
+          </span>
+        </div>
+      )}
 
       <div className="flex">
         <Link href={`/post/${id}`} className="label-s-regular text-smoke-5 hover:text-blue-4 transition-colors flex items-center gap-1">
