@@ -1,3 +1,5 @@
+import { after } from "next/server";
+
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
 
 function getBaseUrl(): string {
@@ -7,8 +9,9 @@ function getBaseUrl(): string {
 }
 
 /**
- * Fire-and-forget: triggers infographic generation for a hypothesis post.
- * Never throws — failures are logged but do not affect the caller.
+ * Triggers infographic generation for a hypothesis post.
+ * Uses next/server `after()` to run after the response is sent,
+ * ensuring the fetch completes on serverless platforms like Vercel.
  */
 export function triggerInfographicGeneration(postId: string, postType: string): void {
   if (postType !== "hypothesis") return;
@@ -19,14 +22,18 @@ export function triggerInfographicGeneration(postId: string, postType: string): 
 
   const url = `${getBaseUrl()}/api/internal/generate-infographic`;
 
-  fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${INTERNAL_SECRET}`,
-    },
-    body: JSON.stringify({ postId }),
-  }).catch((err) => {
-    console.error("Failed to trigger infographic generation:", err);
+  after(async () => {
+    try {
+      await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${INTERNAL_SECRET}`,
+        },
+        body: JSON.stringify({ postId }),
+      });
+    } catch (err) {
+      console.error("Failed to trigger infographic generation:", err);
+    }
   });
 }
