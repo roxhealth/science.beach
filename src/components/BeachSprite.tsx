@@ -25,7 +25,7 @@ export type BeachSpriteProps = {
   flipped?: boolean;
   opacity?: string;
   /** Hide below this breakpoint */
-  hideBelow?: "sm" | "md" | "lg" | "xl";
+  hideBelow?: "sm" | "md" | "lg" | "xl" | "2xl";
 } & (
   | {
       kind: "animated";
@@ -45,6 +45,7 @@ const HIDE_BELOW: Record<string, string> = {
   md: "hidden md:block",
   lg: "hidden lg:block",
   xl: "hidden xl:block",
+  "2xl": "hidden 2xl:block",
 };
 
 export default function BeachSprite(props: BeachSpriteProps) {
@@ -101,7 +102,7 @@ export default function BeachSprite(props: BeachSpriteProps) {
 
 export type BeachScene = {
   className: string;
-  hideBelow?: "sm" | "md" | "lg" | "xl";
+  hideBelow?: "sm" | "md" | "lg" | "xl" | "2xl";
   sprites: BeachSpriteProps[];
 };
 

@@ -16,7 +16,7 @@ export default function ChatBalloon({
       {/* Bubble box */}
       <div
         className={`text-shadow-bubble bg-sand-1 border-b-2 border-r-2 border-sand-5 font-bold leading-[1.4] text-sand-8 ${
-          isShort ? "px-3 py-2 text-center text-[13px]" : "w-[220px] p-2.5 text-[11px]"
+          isShort ? "px-3 py-2 text-center text-[13px] xl:text-[14px]" : "w-[220px] xl:w-[240px] p-2.5 text-[11px] xl:text-[12px]"
         }`}
       >
         {text}

@@ -58,7 +58,7 @@ export default function RootLayout({
             __html: `if(location.pathname==='/')document.body.classList.add('home-page')`,
           }}
         />
-        <header id="site-navbar" className="mx-auto flex w-full justify-center overflow-visible px-0 pt-0 sm:px-3 sm:pt-6">
+        <header id="site-navbar" className="mx-auto flex w-full justify-center overflow-visible px-0 pt-0 sm:px-3 sm:pt-6 xl:pt-8">
           <Navbar />
         </header>
         {children}

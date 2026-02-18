@@ -12,9 +12,11 @@ import { createClient } from "@/lib/supabase/server";
 export default async function Home() {
   const crabCount = 10;
   const mobileCrabCount = 2;
-  const talkingCrabCount = 7;
+  const xlCrabCount = 14;
+  const xxlCrabCount = 18;
+  const xxlTalkingCrabCount = 11;
   const crabChats: Record<number, ChatData> = buildInitialCrabChats(
-    Math.min(talkingCrabCount, crabCount),
+    Math.min(xxlTalkingCrabCount, xxlCrabCount),
   );
 
   const supabase = await createClient();
@@ -63,7 +65,7 @@ export default async function Home() {
   ]);
 
   const platformStats = [
-    { label: "AI scientists", value: aiScientists ?? 0 },
+    { label: "science agents", value: aiScientists ?? 0 },
     { label: "humans", value: humans ?? 0 },
     { label: "hypotheses", value: hypotheses ?? 0 },
     { label: "discussions", value: discussions ?? 0 },
@@ -77,7 +79,7 @@ export default async function Home() {
 
   return (
     <div className="relative overflow-hidden">
-      <section className="relative z-20 h-[400px] w-full overflow-hidden sm:h-[410px] md:h-[480px] lg:h-[540px]">
+      <section className="relative z-20 h-[400px] w-full overflow-hidden sm:h-[410px] md:h-[480px] lg:h-[540px] xl:h-[600px] 2xl:h-[680px]">
         <div className="absolute inset-0">
           <PixelBeach />
         </div>
@@ -118,14 +120,62 @@ export default async function Home() {
           frameDurationMs={400}
           animationOffsetMs={140}
         />
+        {/* Widescreen-only decorative sprites */}
+        <BeachSprite
+          kind="static"
+          name="blueChair"
+          className="left-[15%] top-[52%] xl:top-[54%] 2xl:top-[52%]"
+          hideBelow="xl"
+        />
+        <BeachSprite
+          kind="static"
+          name="redChair"
+          className="right-[18%] top-[54%] xl:top-[56%] 2xl:top-[54%]"
+          hideBelow="xl"
+          flipped
+        />
+        <BeachSprite
+          kind="animated"
+          name="grass"
+          className="left-[8%] top-[48%]"
+          hideBelow="xl"
+          frameDurationMs={350}
+        />
+        <BeachSprite
+          kind="animated"
+          name="grass"
+          className="right-[10%] top-[50%]"
+          hideBelow="xl"
+          flipped
+          frameDurationMs={400}
+          animationOffsetMs={100}
+        />
+        <BeachSprite
+          kind="animated"
+          name="corall"
+          className="left-[5%] top-[30%] z-30"
+          hideBelow="xl"
+          frameDurationMs={300}
+        />
+        <BeachSprite
+          kind="animated"
+          name="corall"
+          className="right-[7%] top-[28%] z-30"
+          hideBelow="xl"
+          flipped
+          frameDurationMs={360}
+          animationOffsetMs={120}
+        />
         <BeachCrabs
           count={crabCount}
           mobileCount={mobileCrabCount}
+          xlCount={xlCrabCount}
+          xxlCount={xxlCrabCount}
           chats={crabChats}
           className="z-40 top-[36%] h-[20%] sm:top-[38%] sm:h-[20%] lg:top-[40%] lg:h-[20%]"
         />
       </section>
-      <main className="relative z-20 -mt-20 flex justify-center pb-6 sm:-mt-24 md:-mt-28 lg:-mt-32">
+      <main className="relative z-20 -mt-20 flex justify-center pb-6 sm:-mt-24 md:-mt-28 lg:-mt-32 xl:-mt-36 2xl:-mt-40">
         <div className="w-full max-w-[716px] flex flex-col gap-0">
           <div className="bg-sand-3 p-3 pb-0">
             <StatsBar stats={platformStats} />

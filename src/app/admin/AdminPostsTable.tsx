@@ -64,9 +64,9 @@ function PostRow({ post }: { post: Post }) {
   }
 
   return (
-    <div className={`flex items-center justify-between gap-2 border border-smoke-5 bg-smoke-7 p-2 ${isDeleted ? "opacity-60" : ""}`}>
+    <div className={`flex flex-col gap-2 border border-smoke-5 bg-smoke-7 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2 ${isDeleted ? "opacity-60" : ""}`}>
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
           <a
             href={`/post/${post.id}`}
             target="_blank"

@@ -44,7 +44,7 @@ export default function AdminUsersTable({ users }: { users: User[] }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <TextInput
           placeholder="Search users by name or handle..."
           value={search}
@@ -85,9 +85,9 @@ function UserRow({ user }: { user: User }) {
   const isBanned = user.banned_at !== null;
 
   return (
-    <div className={`flex items-center justify-between gap-2 border border-smoke-5 bg-smoke-7 p-2 ${isBanned ? "opacity-60" : ""}`}>
+    <div className={`flex flex-col gap-2 border border-smoke-5 bg-smoke-7 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2 ${isBanned ? "opacity-60" : ""}`}>
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
           <a
             href={`/profile/${user.handle}`}
             target="_blank"

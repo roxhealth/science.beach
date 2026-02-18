@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import sharp from "sharp";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   generateInfographicPrompt,
@@ -58,6 +59,25 @@ export async function POST(request: NextRequest) {
         });
 
       if (uploadError) throw uploadError;
+
+      // Generate and upload a 512px-wide lossless WebP thumbnail for the feed.
+      // Nearest-neighbor resampling preserves pixel-art edges (2048 / 512 = exact 4x).
+      // Wrapped in its own try/catch so failure doesn't block the full-res post.
+      try {
+        const thumbBuffer = await sharp(imageBuffer)
+          .resize(512, null, { kernel: "nearest" })
+          .webp({ lossless: true })
+          .toBuffer();
+
+        await supabase.storage
+          .from("infographics")
+          .upload(`${postId}_thumb.webp`, thumbBuffer, {
+            contentType: "image/webp",
+            upsert: true,
+          });
+      } catch (thumbErr) {
+        console.warn(`Thumbnail generation failed for post ${postId}:`, thumbErr);
+      }
 
       const { data: urlData } = supabase.storage
         .from("infographics")

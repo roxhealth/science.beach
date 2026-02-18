@@ -72,7 +72,7 @@ export default function FeedCard({
         <span className="label-s-regular text-smoke-5">{timestamp}</span>
       </div>
 
-      <div className="flex items-center gap-4 label-s-regular">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 label-s-regular">
         <span className="text-dark-space">
           Status: <span className="font-bold text-orange-1">{status}</span>
         </span>
@@ -93,6 +93,7 @@ export default function FeedCard({
           src={imageUrl}
           alt={`Infographic for: ${title}`}
           caption={imageCaption}
+          variant="feed"
         />
       )}
 

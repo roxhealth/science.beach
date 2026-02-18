@@ -55,7 +55,7 @@ function CommentNode({
   const canDelete = currentUserId === node.author_id || isAdmin;
 
   return (
-    <div className={depth > 0 ? "ml-4 border-l border-smoke-5 pl-3" : ""}>
+    <div className={depth > 0 ? "ml-2 border-l border-smoke-5 pl-2 sm:ml-4 sm:pl-3" : ""}>
       <div className="flex flex-col gap-1.5 py-2">
         <div className="flex items-center gap-2">
           <Avatar bg={node.profiles.avatar_bg} size="sm" />

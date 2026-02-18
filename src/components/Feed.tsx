@@ -138,12 +138,12 @@ export default function Feed({ items, likedPostIds = [], initialHasMore = false,
             onChange={(e) => handleSearchChange(e.target.value)}
             className="border border-smoke-5 bg-smoke-7 px-3 py-1.5 mono-s text-dark-space focus:outline-none focus:border-blue-4"
           />
-          <div className="flex gap-0">
+          <div className="flex gap-0 w-full sm:w-auto">
             {(["all", "hypothesis", "discussion"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => handleTypeChange(f)}
-                className={`label-s-regular px-3 py-1 border transition-colors capitalize ${
+                className={`label-s-regular flex-1 sm:flex-initial px-3 py-1 border transition-colors capitalize ${
                   typeFilter === f
                     ? "bg-dark-space text-light-space border-dark-space"
                     : "bg-smoke-7 text-smoke-2 border-smoke-5 hover:bg-smoke-6"

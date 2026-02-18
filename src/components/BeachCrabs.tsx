@@ -110,14 +110,20 @@ function nearestBucketClass(value: number, buckets: readonly number[], classes: 
 export type BeachCrabsProps = {
   count?: number;
   mobileCount?: number;
+  xlCount?: number;
+  xxlCount?: number;
   seed?: number;
   chats?: Record<number, ChatData>;
   className?: string;
 };
 
+type ScreenTier = "mobile" | "desktop" | "xl" | "2xl";
+
 export default function BeachCrabs({
   count = 10,
   mobileCount,
+  xlCount,
+  xxlCount,
   seed = 42,
   chats,
   className,
@@ -130,15 +136,38 @@ export default function BeachCrabs({
   );
   const [speakingIds, setSpeakingIds] = useState<Set<number>>(new Set());
   const lastSpokeCycleRef = useRef<Record<number, number>>({});
-  const [isMobile, setIsMobile] = useState(false);
-  const visibleCount = Math.max(1, isMobile ? (mobileCount ?? count) : count);
+  const [screenTier, setScreenTier] = useState<ScreenTier>("desktop");
+
+  const visibleCount = Math.max(1, (() => {
+    switch (screenTier) {
+      case "mobile": return mobileCount ?? count;
+      case "xl": return xlCount ?? count;
+      case "2xl": return xxlCount ?? xlCount ?? count;
+      default: return count;
+    }
+  })());
 
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 639px)");
-    const apply = () => setIsMobile(media.matches);
+    const mqMobile = window.matchMedia("(max-width: 639px)");
+    const mqXl = window.matchMedia("(min-width: 1280px)");
+    const mqXxl = window.matchMedia("(min-width: 1536px)");
+
+    const apply = () => {
+      if (mqMobile.matches) setScreenTier("mobile");
+      else if (mqXxl.matches) setScreenTier("2xl");
+      else if (mqXl.matches) setScreenTier("xl");
+      else setScreenTier("desktop");
+    };
+
     apply();
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
+    mqMobile.addEventListener("change", apply);
+    mqXl.addEventListener("change", apply);
+    mqXxl.addEventListener("change", apply);
+    return () => {
+      mqMobile.removeEventListener("change", apply);
+      mqXl.removeEventListener("change", apply);
+      mqXxl.removeEventListener("change", apply);
+    };
   }, []);
 
   const crabs = useMemo<CrabData[]>(() => {
@@ -282,7 +311,7 @@ export default function BeachCrabs({
 
       const candidates = shuffleIds(chatIds);
       const selected: number[] = [];
-      const maxSpeakers = isMobile ? 1 : Math.max(1, Math.min(3, Math.ceil(chatIds.length / 3)));
+      const maxSpeakers = screenTier === "mobile" ? 1 : Math.max(1, Math.min(4, Math.ceil(chatIds.length / 3)));
       const cooldownCycles = 2;
 
       for (const id of candidates) {
@@ -328,7 +357,7 @@ export default function BeachCrabs({
       if (clearTimer) window.clearTimeout(clearTimer);
       if (nextCycleTimer) window.clearTimeout(nextCycleTimer);
     };
-  }, [chatIds, crabs, isMobile]);
+  }, [chatIds, crabs, screenTier]);
 
   return (
     <div className={className ? `absolute w-full ${className}` : "absolute w-full top-[280px] h-[120px]"}>
