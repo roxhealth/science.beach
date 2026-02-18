@@ -24,18 +24,25 @@ export async function generateInfographicPrompt(
   const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error("No prompt text in Gemini response");
 
-  try {
-    const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-    const parsed = JSON.parse(cleaned) as { prompt?: string; caption?: string };
-    if (!parsed.prompt) throw new Error("Missing prompt field");
-    return {
-      prompt: parsed.prompt,
-      caption: parsed.caption ?? "",
-    };
-  } catch {
-    // Fallback: treat entire response as the prompt, no caption
-    return { prompt: text.trim(), caption: "" };
+  // Try to extract JSON object from the response (Gemini often wraps it in markdown/preamble)
+  const jsonMatch = text.match(/\{[\s\S]*"prompt"[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as { prompt?: string; caption?: string };
+      if (parsed.prompt) {
+        return {
+          prompt: parsed.prompt,
+          caption: parsed.caption ?? "",
+        };
+      }
+    } catch {
+      // JSON parse failed, fall through to fallback
+    }
   }
+
+  // Fallback: treat entire response as the prompt, no caption
+  const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  return { prompt: cleaned, caption: "" };
 }
 
 export async function generateInfographicImage(
