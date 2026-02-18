@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   generateInfographicPrompt,
@@ -6,6 +6,9 @@ import {
 } from "@/lib/gemini";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
+
+// Allow up to 120s for the background generation (Gemini calls can be slow)
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -20,64 +23,67 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminClient();
 
-  try {
-    const { data: post, error: fetchError } = await supabase
-      .from("posts")
-      .select("id, title, body, type, image_status")
-      .eq("id", postId)
-      .single();
+  const { data: post, error: fetchError } = await supabase
+    .from("posts")
+    .select("id, title, body, type, image_status")
+    .eq("id", postId)
+    .single();
 
-    if (fetchError || !post) {
-      return NextResponse.json({ error: "Post not found" }, { status: 404 });
-    }
+  if (fetchError || !post) {
+    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  }
 
-    if (post.type !== "hypothesis" || post.image_status !== "pending") {
-      return NextResponse.json({ error: "Skipped" }, { status: 200 });
-    }
+  if (post.type !== "hypothesis" || post.image_status !== "pending") {
+    return NextResponse.json({ error: "Skipped" }, { status: 200 });
+  }
 
-    await supabase
-      .from("posts")
-      .update({ image_status: "generating" })
-      .eq("id", postId);
+  // Mark as generating immediately
+  await supabase
+    .from("posts")
+    .update({ image_status: "generating" })
+    .eq("id", postId);
 
-    const { prompt: imagePrompt, caption } = await generateInfographicPrompt(post.title, post.body);
-    const imageBuffer = await generateInfographicImage(imagePrompt);
-
-    const filePath = `${postId}.png`;
-    const { error: uploadError } = await supabase.storage
-      .from("infographics")
-      .upload(filePath, imageBuffer, {
-        contentType: "image/png",
-        upsert: true,
-      });
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage
-      .from("infographics")
-      .getPublicUrl(filePath);
-
-    await supabase
-      .from("posts")
-      .update({
-        image_url: urlData.publicUrl,
-        image_status: "ready",
-        image_caption: caption || null,
-      })
-      .eq("id", postId);
-
-    return NextResponse.json({ success: true, image_url: urlData.publicUrl });
-  } catch (error) {
-    console.error(`Infographic generation failed for post ${postId}:`, error);
+  // Do the heavy work after the response is sent
+  after(async () => {
     try {
+      const { prompt: imagePrompt, caption } = await generateInfographicPrompt(post.title, post.body);
+      const imageBuffer = await generateInfographicImage(imagePrompt);
+
+      const filePath = `${postId}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from("infographics")
+        .upload(filePath, imageBuffer, {
+          contentType: "image/png",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("infographics")
+        .getPublicUrl(filePath);
+
       await supabase
         .from("posts")
-        .update({ image_status: "failed" })
+        .update({
+          image_url: urlData.publicUrl,
+          image_status: "ready",
+          image_caption: caption || null,
+        })
         .eq("id", postId);
-    } catch {
-      // Don't let the status update failure mask the original error
+    } catch (error) {
+      console.error(`Infographic generation failed for post ${postId}:`, error);
+      try {
+        await supabase
+          .from("posts")
+          .update({ image_status: "failed" })
+          .eq("id", postId);
+      } catch {
+        // Don't let the status update failure mask the original error
+      }
     }
+  });
 
-    return NextResponse.json({ error: "Generation failed" }, { status: 500 });
-  }
+  // Return immediately — generation happens in after()
+  return NextResponse.json({ accepted: true }, { status: 202 });
 }
