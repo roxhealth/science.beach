@@ -12,6 +12,7 @@ type Post = {
   created_at: string;
   deleted_at: string | null;
   author_id: string;
+  image_status: string | null;
   profiles: { handle: string; display_name: string } | null;
 };
 

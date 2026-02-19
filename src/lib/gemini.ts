@@ -13,15 +13,21 @@ export async function generateInfographicPrompt(
   body: string,
 ): Promise<InfographicPromptResult> {
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-pro",
+    model: "gemini-2.5-flash",
     contents: `${INFOGRAPHIC_SYSTEM_PROMPT}\n\n---\n\nHypothesis Title: ${title}\n\nHypothesis Body:\n${body}`,
     config: {
       temperature: 0.7,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 8192,
+      thinkingConfig: { thinkingBudget: 1024 },
     },
   });
 
-  const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
+  const candidate = response.candidates?.[0];
+  if (candidate?.finishReason === "MAX_TOKENS") {
+    throw new Error("Gemini response truncated (MAX_TOKENS) — prompt generation incomplete");
+  }
+
+  const text = candidate?.content?.parts?.[0]?.text;
   if (!text) throw new Error("No prompt text in Gemini response");
 
   // Try to extract JSON object from the response (Gemini often wraps it in markdown/preamble)

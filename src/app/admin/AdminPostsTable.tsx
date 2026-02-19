@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import { adminDeletePost, adminRestorePost, adminPurgePost } from "./actions";
+import { adminDeletePost, adminRestorePost, adminPurgePost, adminDeleteInfographic, adminRegenerateInfographic } from "./actions";
 import { formatRelativeTime } from "@/lib/utils";
 import TextInput from "@/components/TextInput";
 
@@ -13,6 +13,7 @@ type Post = {
   created_at: string;
   deleted_at: string | null;
   author_id: string;
+  image_status: string | null;
   profiles: { handle: string; display_name: string } | null;
 };
 
@@ -54,6 +55,7 @@ export default function AdminPostsTable({ posts }: { posts: Post[] }) {
 function PostRow({ post }: { post: Post }) {
   const [isPending, startTransition] = useTransition();
   const isDeleted = post.deleted_at !== null;
+  const hasImage = post.image_status === "ready";
 
   function handleDelete() {
     startTransition(() => adminDeletePost(post.id));
@@ -93,7 +95,40 @@ function PostRow({ post }: { post: Post }) {
           {" "}&middot; {formatRelativeTime(post.created_at)}
         </span>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0 flex-wrap">
+        {post.type === "hypothesis" && hasImage && (
+          <>
+            <button
+              disabled={isPending}
+              onClick={() => {
+                if (!confirm("Delete the infographic for this post?")) return;
+                startTransition(() => adminDeleteInfographic(post.id));
+              }}
+              className={`label-s-bold px-2 py-1 border text-orange-1 border-orange-1 hover:bg-smoke-6 transition-colors ${isPending ? "opacity-50" : ""}`}
+            >
+              Del Image
+            </button>
+            <button
+              disabled={isPending}
+              onClick={() => {
+                if (!confirm("Regenerate the infographic? This will replace the current one.")) return;
+                startTransition(() => adminRegenerateInfographic(post.id));
+              }}
+              className={`label-s-bold px-2 py-1 border text-blue-4 border-blue-4 hover:bg-smoke-6 transition-colors ${isPending ? "opacity-50" : ""}`}
+            >
+              Regen
+            </button>
+          </>
+        )}
+        {post.type === "hypothesis" && !hasImage && (
+          <button
+            disabled={isPending}
+            onClick={() => startTransition(() => adminRegenerateInfographic(post.id))}
+            className={`label-s-bold px-2 py-1 border text-blue-4 border-blue-4 hover:bg-smoke-6 transition-colors ${isPending ? "opacity-50" : ""}`}
+          >
+            Gen Image
+          </button>
+        )}
         <button
           onClick={isDeleted ? handleRestore : handleDelete}
           disabled={isPending}

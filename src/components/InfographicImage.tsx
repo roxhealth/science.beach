@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useTransition } from "react";
+import { adminDeleteInfographic, adminRegenerateInfographic } from "@/app/admin/actions";
 
 type InfographicImageProps = {
   src: string;
   alt: string;
   caption?: string | null;
   variant?: "feed" | "full";
+  postId?: string;
+  isAdmin?: boolean;
 };
 
 function toThumbUrl(src: string): string {
@@ -18,10 +21,13 @@ export default function InfographicImage({
   alt,
   caption,
   variant = "full",
+  postId,
+  isAdmin,
 }: InfographicImageProps) {
   const [expanded, setExpanded] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
   const [fullReady, setFullReady] = useState(variant === "full");
+  const [isPending, startTransition] = useTransition();
   const preloaded = useRef(false);
 
   const close = useCallback(() => setExpanded(false), []);
@@ -47,28 +53,58 @@ export default function InfographicImage({
   // Feed variant tries thumbnail first; falls back to full-res on 404
   const inlineSrc = variant === "feed" && !thumbFailed ? toThumbUrl(src) : src;
 
+  const showAdmin = isAdmin && postId;
+
   return (
     <>
       <div className="flex flex-col gap-1">
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="relative w-full border-2 border-sand-4 overflow-hidden cursor-zoom-in"
-        >
-          <img
-            src={inlineSrc}
-            alt={alt}
-            className="w-full h-auto"
-            style={{ imageRendering: "pixelated" }}
-            loading="lazy"
-            decoding="async"
-            onError={
-              variant === "feed" && !thumbFailed
-                ? () => setThumbFailed(true)
-                : undefined
-            }
-          />
-        </button>
+        <div className="relative group">
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="relative w-full border-2 border-sand-4 overflow-hidden cursor-zoom-in"
+          >
+            <img
+              src={inlineSrc}
+              alt={alt}
+              className="w-full h-auto"
+              style={{ imageRendering: "pixelated" }}
+              loading="lazy"
+              decoding="async"
+              onError={
+                variant === "feed" && !thumbFailed
+                  ? () => setThumbFailed(true)
+                  : undefined
+              }
+            />
+          </button>
+          {showAdmin && (
+            <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                disabled={isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!confirm("Regenerate the infographic? This will replace the current one.")) return;
+                  startTransition(() => adminRegenerateInfographic(postId));
+                }}
+                className={`label-s-bold px-3 py-1.5 bg-light-space text-blue-4 border-2 border-blue-4 hover:bg-blue-4 hover:text-light-space transition-colors shadow-[2px_2px_0_rgba(0,0,0,0.3)] ${isPending ? "opacity-50" : ""}`}
+              >
+                {isPending ? "..." : "Regen"}
+              </button>
+              <button
+                disabled={isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!confirm("Delete the infographic for this post?")) return;
+                  startTransition(() => adminDeleteInfographic(postId));
+                }}
+                className={`label-s-bold px-3 py-1.5 bg-light-space text-orange-1 border-2 border-orange-1 hover:bg-orange-1 hover:text-light-space transition-colors shadow-[2px_2px_0_rgba(0,0,0,0.3)] ${isPending ? "opacity-50" : ""}`}
+              >
+                {isPending ? "..." : "Delete"}
+              </button>
+            </div>
+          )}
+        </div>
         {caption && (
           <p className="label-s-regular text-smoke-5">{caption}</p>
         )}

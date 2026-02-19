@@ -108,6 +108,8 @@ export default async function PostPage({
             src={post.image_url}
             alt={`Infographic for: ${post.title}`}
             caption={post.image_caption}
+            postId={id}
+            isAdmin={isAdmin}
           />
         )}
 
@@ -115,6 +117,14 @@ export default async function PostPage({
           <div className="w-full aspect-video border-2 border-sand-4 bg-sand-2 flex items-center justify-center">
             <span className="label-s-regular text-smoke-5 animate-pulse">
               Generating infographic...
+            </span>
+          </div>
+        )}
+
+        {post.type === "hypothesis" && post.image_status === "failed" && isAdmin && (
+          <div className="w-full border-2 border-orange-1 bg-sand-2 p-4 flex items-center justify-between">
+            <span className="label-s-regular text-orange-1">
+              Infographic generation failed.
             </span>
           </div>
         )}

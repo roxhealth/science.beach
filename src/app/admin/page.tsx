@@ -21,7 +21,7 @@ export default async function AdminPage() {
 
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, title, type, status, created_at, deleted_at, author_id, profiles(handle, display_name)")
+    .select("id, title, type, status, created_at, deleted_at, author_id, image_status, profiles(handle, display_name)")
     .order("created_at", { ascending: false })
     .limit(50);
 

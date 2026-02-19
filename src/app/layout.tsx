@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -55,9 +56,10 @@ export default function RootLayout({
       <body className="antialiased">
         <script
           dangerouslySetInnerHTML={{
-            __html: `if(location.pathname==='/')document.body.classList.add('home-page')`,
+            __html: `if(location.pathname==='/')document.body.classList.add('home-page');if(location.hash.includes('figmacapture')){document.documentElement.style.setProperty('--figma-capture','1');var s=document.createElement('style');s.textContent='*,*::before,*::after{animation-play-state:paused!important;animation:none!important;transition:none!important}';document.head.appendChild(s)}`,
           }}
         />
+        <Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="beforeInteractive" />
         <header id="site-navbar" className="mx-auto flex w-full justify-center overflow-visible px-0 pt-0 sm:px-3 sm:pt-6 xl:pt-8">
           <Navbar />
         </header>

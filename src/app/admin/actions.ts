@@ -3,6 +3,11 @@
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import sharp from "sharp";
+import {
+  generateInfographicPrompt,
+  generateInfographicImage,
+} from "@/lib/gemini";
 
 export async function adminDeletePost(postId: string) {
   await requireAdmin();
@@ -106,6 +111,104 @@ export async function adminToggleBan(profileId: string, isBanned: boolean) {
 
   if (error) throw new Error(error.message);
 
+  revalidatePath("/admin");
+}
+
+export async function adminDeleteInfographic(postId: string) {
+  await requireAdmin();
+  const supabase = createAdminClient();
+
+  // Remove images from storage
+  await supabase.storage
+    .from("infographics")
+    .remove([`${postId}.png`, `${postId}_thumb.webp`]);
+
+  // Reset image fields on the post
+  const { error } = await supabase
+    .from("posts")
+    .update({ image_url: null, image_status: "none", image_caption: null })
+    .eq("id", postId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/");
+  revalidatePath(`/post/${postId}`);
+  revalidatePath("/admin");
+}
+
+export async function adminRegenerateInfographic(postId: string) {
+  await requireAdmin();
+  const supabase = createAdminClient();
+
+  // Fetch the post for generation
+  const { data: post, error: fetchError } = await supabase
+    .from("posts")
+    .select("id, title, body, type")
+    .eq("id", postId)
+    .single();
+
+  if (fetchError || !post) throw new Error("Post not found");
+  if (post.type !== "hypothesis") throw new Error("Only hypothesis posts have infographics");
+
+  // Remove old images from storage
+  await supabase.storage
+    .from("infographics")
+    .remove([`${postId}.png`, `${postId}_thumb.webp`]);
+
+  // Mark as generating
+  await supabase
+    .from("posts")
+    .update({ image_url: null, image_status: "generating", image_caption: null })
+    .eq("id", postId);
+
+  // Generate synchronously so the transition stays pending until completion
+  try {
+    const { prompt: imagePrompt, caption } = await generateInfographicPrompt(post.title, post.body);
+    const imageBuffer = await generateInfographicImage(imagePrompt);
+
+    const filePath = `${postId}.png`;
+    const { error: uploadError } = await supabase.storage
+      .from("infographics")
+      .upload(filePath, imageBuffer, { contentType: "image/png", upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    // Generate thumbnail
+    try {
+      const thumbBuffer = await sharp(imageBuffer)
+        .resize(512, null, { kernel: "nearest" })
+        .webp({ lossless: true })
+        .toBuffer();
+
+      await supabase.storage
+        .from("infographics")
+        .upload(`${postId}_thumb.webp`, thumbBuffer, { contentType: "image/webp", upsert: true });
+    } catch (thumbErr) {
+      console.warn(`Thumbnail generation failed for post ${postId}:`, thumbErr);
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("infographics")
+      .getPublicUrl(filePath);
+
+    await supabase
+      .from("posts")
+      .update({
+        image_url: `${urlData.publicUrl}?v=${Date.now()}`,
+        image_status: "ready",
+        image_caption: caption || null,
+      })
+      .eq("id", postId);
+  } catch (error) {
+    console.error(`Infographic regeneration failed for post ${postId}:`, error);
+    await supabase
+      .from("posts")
+      .update({ image_status: "failed" })
+      .eq("id", postId);
+  }
+
+  revalidatePath("/");
+  revalidatePath(`/post/${postId}`);
   revalidatePath("/admin");
 }
 

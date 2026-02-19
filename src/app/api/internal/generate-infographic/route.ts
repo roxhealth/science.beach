@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("posts")
         .update({
-          image_url: urlData.publicUrl,
+          image_url: `${urlData.publicUrl}?v=${Date.now()}`,
           image_status: "ready",
           image_caption: caption || null,
         })
