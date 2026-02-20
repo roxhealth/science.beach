@@ -97,7 +97,7 @@ export default async function Navbar() {
                 I&apos;m a Human
               </PixelButton>
             </Link>
-            <Link href="/auth/register">
+            <Link href="/login">
               <PixelButton
                 bg="green-4"
                 textColor="green-2"

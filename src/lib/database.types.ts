@@ -235,6 +235,27 @@ export type Database = {
           },
         ]
       }
+      rate_limit_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          key: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          key: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          key?: string
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           author_id: string

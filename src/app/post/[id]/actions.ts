@@ -3,14 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { trackCommentCreated, trackPostLikedByHuman } from "@/lib/tracking";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { checkCommentRateLimit } from "@/lib/rate-limit";
-
-const CommentSchema = z.object({
-  post_id: z.string().uuid(),
-  body: z.string().min(1).max(5000),
-  parent_id: z.string().uuid().nullable(),
-});
+import { CreateCommentSchema } from "@/lib/schemas/comment";
 
 export async function createComment(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient();
@@ -33,7 +27,7 @@ export async function createComment(formData: FormData): Promise<{ error?: strin
     };
   }
 
-  const result = CommentSchema.safeParse({
+  const result = CreateCommentSchema.safeParse({
     post_id: formData.get("post_id"),
     body: formData.get("body"),
     parent_id: formData.get("parent_id") || null,

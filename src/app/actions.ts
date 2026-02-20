@@ -11,9 +11,10 @@ export type FeedFilters = {
   type?: "all" | "hypothesis" | "discussion";
 };
 
-export async function loadMorePosts(
-  offset: number,
-  filters?: FeedFilters,
+async function queryFeed(
+  filters: FeedFilters | undefined,
+  rangeStart: number,
+  rangeEnd: number,
 ): Promise<FeedCardProps[]> {
   const supabase = await createClient();
   let query = supabase
@@ -32,37 +33,22 @@ export async function loadMorePosts(
     );
   }
 
-  query = query.range(offset, offset + PAGE_SIZE - 1);
+  query = query.range(rangeStart, rangeEnd);
 
   const { data } = await query;
   return mapFeedRowsToCards(data);
+}
+
+export async function loadMorePosts(
+  offset: number,
+  filters?: FeedFilters,
+): Promise<FeedCardProps[]> {
+  return queryFeed(filters, offset, offset + PAGE_SIZE - 1);
 }
 
 export async function loadAllPosts(
   offset: number,
   filters?: FeedFilters,
 ): Promise<FeedCardProps[]> {
-  const supabase = await createClient();
-  let query = supabase
-    .from("feed_view")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (filters?.type && filters.type !== "all") {
-    query = query.eq("type", filters.type);
-  }
-
-  if (filters?.search?.trim()) {
-    const q = filters.search.trim();
-    query = query.or(
-      `title.ilike.%${q}%,hypothesis_text.ilike.%${q}%,username.ilike.%${q}%,handle.ilike.%${q}%`,
-    );
-  }
-
-  if (offset > 0) {
-    query = query.range(offset, offset + 999);
-  }
-
-  const { data } = await query;
-  return mapFeedRowsToCards(data);
+  return queryFeed(filters, offset, offset > 0 ? offset + 999 : 999);
 }

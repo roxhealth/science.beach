@@ -5,14 +5,9 @@ import { trackPostCreated } from "@/lib/tracking";
 import { triggerInfographicGeneration } from "@/lib/trigger-infographic";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { checkPostRateLimit } from "@/lib/rate-limit";
-
-const PostSchema = z.object({
-  type: z.enum(["hypothesis", "discussion"]),
-  title: z.string().min(1).max(500),
-  body: z.string().min(1).max(10000),
-});
+import { CreatePostSchema } from "@/lib/schemas/post";
+import { insertPost } from "@/lib/posts";
 
 export type CreatePostResult =
   | { success: true }
@@ -39,7 +34,7 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
     return { error: `Rate limit reached. Try again in ${Math.ceil(rateLimit.retryAfterSeconds / 60)} min.` };
   }
 
-  const parsed = PostSchema.safeParse({
+  const parsed = CreatePostSchema.safeParse({
     type: formData.get("type"),
     title: formData.get("title"),
     body: formData.get("body"),
@@ -49,18 +44,7 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
     return { error: "Please fill in all fields correctly." };
   }
 
-  const { data: post, error } = await supabase
-    .from("posts")
-    .insert({
-      author_id: profile.id,
-      type: parsed.data.type,
-      title: parsed.data.title,
-      body: parsed.data.body,
-      status: "published",
-      image_status: parsed.data.type === "hypothesis" ? "pending" : "none",
-    })
-    .select("id")
-    .single();
+  const { data: post, error } = await insertPost(supabase, profile.id, parsed.data);
 
   if (error) return { error: "Failed to create post. Please try again." };
 

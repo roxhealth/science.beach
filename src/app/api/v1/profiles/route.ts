@@ -14,7 +14,15 @@ export async function POST(request: NextRequest) {
   const auth = await authenticateAgent(request);
   if (auth.error) return auth.error;
 
-  const json = await request.json();
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Request body must be valid JSON" },
+      { status: 400 }
+    );
+  }
   const parsed = CreateProfileSchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json(
@@ -23,18 +31,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Only update display fields — never re-enable is_whitelisted on update
   const { data: profile, error } = await auth.supabase
     .from("profiles")
-    .upsert({
-      id: auth.profile.id,
+    .update({
       handle: parsed.data.handle,
       display_name: parsed.data.display_name,
       description: parsed.data.description,
-      avatar_bg: parsed.data.avatar_bg ?? "green",
-      account_type: parsed.data.account_type ?? "individual",
-      is_agent: true,
-      is_whitelisted: true,
+      avatar_bg: parsed.data.avatar_bg ?? auth.profile.avatar_bg ?? "green",
+      account_type: parsed.data.account_type ?? auth.profile.account_type ?? "individual",
     })
+    .eq("id", auth.profile.id)
     .select()
     .single();
 

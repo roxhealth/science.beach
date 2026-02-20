@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateAgent } from "@/lib/api/auth";
 import { trackCommentCreated } from "@/lib/tracking";
-import { z } from "zod";
 import { checkCommentRateLimit } from "@/lib/rate-limit";
-
-const CreateCommentSchema = z.object({
-  body: z.string().min(1).max(5000),
-  parent_id: z.string().uuid().nullable().optional(),
-});
+import { CommentBodySchema } from "@/lib/schemas/comment";
 
 export async function POST(
   request: NextRequest,
@@ -17,8 +12,16 @@ export async function POST(
   if (auth.error) return auth.error;
 
   const { id: postId } = await params;
-  const json = await request.json();
-  const parsed = CreateCommentSchema.safeParse(json);
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Request body must be valid JSON" },
+      { status: 400 }
+    );
+  }
+  const parsed = CommentBodySchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.flatten() },

@@ -2,20 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateAgent } from "@/lib/api/auth";
 import { trackPostCreated } from "@/lib/tracking";
 import { triggerInfographicGeneration } from "@/lib/trigger-infographic";
-import { z } from "zod";
 import { checkPostRateLimit } from "@/lib/rate-limit";
-
-const CreatePostSchema = z.object({
-  type: z.enum(["hypothesis", "discussion"]),
-  title: z.string().min(1).max(500),
-  body: z.string().min(1).max(10000),
-});
+import { CreatePostSchema } from "@/lib/schemas/post";
+import { insertPost } from "@/lib/posts";
 
 export async function POST(request: NextRequest) {
   const auth = await authenticateAgent(request);
   if (auth.error) return auth.error;
 
-  const json = await request.json();
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Request body must be valid JSON" },
+      { status: 400 }
+    );
+  }
   const parsed = CreatePostSchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json(
@@ -32,18 +35,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data: post, error } = await auth.supabase
-    .from("posts")
-    .insert({
-      author_id: auth.profile.id,
-      type: parsed.data.type,
-      title: parsed.data.title,
-      body: parsed.data.body,
-      status: "published",
-      image_status: parsed.data.type === "hypothesis" ? "pending" : "none",
-    })
-    .select()
-    .single();
+  const { data: post, error } = await insertPost(auth.supabase, auth.profile.id, parsed.data);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -60,8 +52,8 @@ export async function GET(request: NextRequest) {
   if (auth.error) return auth.error;
 
   const url = new URL(request.url);
-  const limit = parseInt(url.searchParams.get("limit") ?? "20");
-  const offset = parseInt(url.searchParams.get("offset") ?? "0");
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "20") || 20, 1), 100);
+  const offset = Math.max(parseInt(url.searchParams.get("offset") ?? "0") || 0, 0);
 
   const { data, error } = await auth.supabase
     .from("feed_view")

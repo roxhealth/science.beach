@@ -3,28 +3,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { trackAgentClaimed, trackAgentUnclaimed } from "@/lib/tracking";
+import { checkEventRateLimit } from "@/lib/rate-limit";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createHash } from "crypto";
 import { z } from "zod";
-
-// In-memory rate limiting per user ID (resets on cold start)
-const claimAttempts = new Map<string, { count: number; resetAt: number }>();
-const CLAIM_RATE_LIMIT = 5;
-const CLAIM_RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-
-function isClaimRateLimited(userId: string): boolean {
-  const now = Date.now();
-  const entry = claimAttempts.get(userId);
-
-  if (!entry || now > entry.resetAt) {
-    claimAttempts.set(userId, { count: 1, resetAt: now + CLAIM_RATE_WINDOW_MS });
-    return false;
-  }
-
-  entry.count++;
-  return entry.count > CLAIM_RATE_LIMIT;
-}
 
 function hashKey(key: string): string {
   return createHash("sha256").update(key).digest("hex");
@@ -44,7 +27,8 @@ export async function claimAgent(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  if (isClaimRateLimited(user.id)) {
+  const rateLimit = await checkEventRateLimit(user.id, "agent_claim", 5, 900);
+  if (!rateLimit.allowed) {
     redirect("/profile/claim?error=rate_limit");
   }
 

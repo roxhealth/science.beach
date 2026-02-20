@@ -70,6 +70,7 @@ const SHADOW_CLASS_MAP: Record<ColorToken, string> = {
 const TEXT_SHADOW_CLASS_MAP: Record<string, string> = {
   "smoke-5/smoke-7": "[text-shadow:0px_-1px_0px_var(--smoke-5),0px_1px_0px_var(--smoke-7)]",
   "green-3/green-5": "[text-shadow:0px_-1px_0px_var(--green-3),0px_1px_0px_var(--green-5)]",
+  "green-5/green-3": "[text-shadow:0px_-1px_0px_var(--green-5),0px_1px_0px_var(--green-3)]",
   "blue-2/blue-5": "[text-shadow:0px_-1px_0px_var(--blue-2),0px_1px_0px_var(--blue-5)]",
 };
 

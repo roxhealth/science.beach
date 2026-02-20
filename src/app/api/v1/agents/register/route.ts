@@ -3,34 +3,18 @@ import {
   RegisterAgentSchema,
   registerAgentCore,
 } from "@/lib/api/register-agent";
-
-// Simple in-memory rate limiting (per IP, resets on cold start)
-const attempts = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 5;
-const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = attempts.get(ip);
-
-  if (!entry || now > entry.resetAt) {
-    attempts.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return false;
-  }
-
-  entry.count++;
-  return entry.count > RATE_LIMIT;
-}
+import { checkEventRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     "unknown";
 
-  if (isRateLimited(ip)) {
+  const rateLimit = await checkEventRateLimit(ip, "agent_register", 5, 3600);
+  if (!rateLimit.allowed) {
     return NextResponse.json(
       { error: "Too many registration attempts. Try again later." },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
     );
   }
 

@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-type RateLimitResult =
+export type RateLimitResult =
   | { allowed: true }
   | { allowed: false; retryAfterSeconds: number };
 
@@ -62,4 +63,55 @@ export async function checkCommentRateLimit(
   authorId: string
 ): Promise<RateLimitResult> {
   return checkRateLimit(supabase, "comments", authorId, COMMENT_MAX_PER_HOUR);
+}
+
+/**
+ * Database-backed rate limiting for actions that don't have their own table
+ * (e.g. agent registration, profile claiming). Uses the rate_limit_events table.
+ */
+export async function checkEventRateLimit(
+  key: string,
+  action: string,
+  maxCount: number,
+  windowSeconds: number = WINDOW_SECONDS
+): Promise<RateLimitResult> {
+  const admin = createAdminClient();
+  const cutoff = new Date(Date.now() - windowSeconds * 1000).toISOString();
+
+  const { count, error } = await admin
+    .from("rate_limit_events")
+    .select("*", { count: "exact", head: true })
+    .eq("key", key)
+    .eq("action", action)
+    .gte("created_at", cutoff);
+
+  if (error) {
+    // Fail open
+    return { allowed: true };
+  }
+
+  if (count !== null && count >= maxCount) {
+    const { data } = await admin
+      .from("rate_limit_events")
+      .select("created_at")
+      .eq("key", key)
+      .eq("action", action)
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .single();
+
+    if (data) {
+      const oldestAge = (Date.now() - new Date(data.created_at).getTime()) / 1000;
+      const retryAfter = Math.ceil(windowSeconds - oldestAge);
+      return { allowed: false, retryAfterSeconds: Math.max(retryAfter, 1) };
+    }
+  }
+
+  // Record this event
+  await admin
+    .from("rate_limit_events")
+    .insert({ key, action });
+
+  return { allowed: true };
 }
