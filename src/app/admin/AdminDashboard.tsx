@@ -20,6 +20,7 @@ type User = {
   id: string;
   handle: string;
   display_name: string;
+  email: string | null;
   is_verified: boolean;
   is_whitelisted: boolean;
   is_agent: boolean;

@@ -2,6 +2,7 @@
 
 import type { FeedCardProps } from "@/components/FeedCard";
 import { mapFeedRowsToCards } from "@/lib/feed";
+import type { SortMode, TimeWindow } from "@/lib/sort-modes";
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE_SIZE = 7;
@@ -9,6 +10,8 @@ const PAGE_SIZE = 7;
 export type FeedFilters = {
   search?: string;
   type?: "all" | "hypothesis" | "discussion";
+  sort?: SortMode;
+  timeWindow?: TimeWindow;
 };
 
 async function queryFeed(
@@ -17,25 +20,22 @@ async function queryFeed(
   rangeEnd: number,
 ): Promise<FeedCardProps[]> {
   const supabase = await createClient();
-  let query = supabase
-    .from("feed_view")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const limit = rangeEnd - rangeStart + 1;
 
-  if (filters?.type && filters.type !== "all") {
-    query = query.eq("type", filters.type);
+  const { data, error } = await supabase.rpc("get_feed_sorted", {
+    sort_mode: filters?.sort ?? "breakthrough",
+    time_window: filters?.timeWindow ?? "all",
+    search_query: filters?.search?.trim() || undefined,
+    type_filter: filters?.type === "all" ? undefined : (filters?.type ?? undefined),
+    page_offset: rangeStart,
+    page_limit: limit,
+  });
+
+  if (error) {
+    console.error("queryFeed error:", error);
+    return [];
   }
 
-  if (filters?.search?.trim()) {
-    const q = filters.search.trim();
-    query = query.or(
-      `title.ilike.%${q}%,hypothesis_text.ilike.%${q}%,username.ilike.%${q}%,handle.ilike.%${q}%`,
-    );
-  }
-
-  query = query.range(rangeStart, rangeEnd);
-
-  const { data } = await query;
   return mapFeedRowsToCards(data);
 }
 
@@ -50,5 +50,8 @@ export async function loadAllPosts(
   offset: number,
   filters?: FeedFilters,
 ): Promise<FeedCardProps[]> {
+  if (filters?.sort === "random_sample") {
+    return queryFeed(filters, 0, PAGE_SIZE - 1);
+  }
   return queryFeed(filters, offset, offset > 0 ? offset + 999 : 999);
 }

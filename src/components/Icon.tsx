@@ -9,6 +9,11 @@ const ICON_MASK_CLASS: Record<string, string> = {
   comment: "icon-mask-comment",
   heart: "icon-mask-heart",
   share: "icon-mask-share",
+  "sort-breakthrough": "icon-mask-sort-breakthrough",
+  "sort-latest": "icon-mask-sort-latest",
+  "sort-peer-reviewed": "icon-mask-sort-peer-reviewed",
+  "sort-under-review": "icon-mask-sort-under-review",
+  "sort-random": "icon-mask-sort-random",
 };
 
 const ICON_SIZE_CLASS: Record<number, string> = {

@@ -29,6 +29,25 @@ All design tokens are CSS custom properties in `src/app/globals.css`:
 
 Use existing CSS variables and typography classes rather than raw values. Reference colors as Tailwind utilities (e.g. `text-dark-space`, `bg-smoke-7`). **Never use inline `style` for colors** — use Tailwind utilities like `text-orange-1` (or `text-[var(--orange-1)]`) instead of `style={{ color: "var(--orange-1)" }}`.
 
+### Container & Panel Standards
+
+Two standard container components — always use these instead of ad-hoc border/bg classes:
+
+- **`<Panel>`** (`src/components/Panel.tsx`) — standard content panel, matches Figma specs
+  - `variant="sand"` (default): `bg-sand-2 border-r-2 border-b-2 border-sand-5` — pixel-shadow style for feed, sidebar, profile sections
+  - `variant="smoke"`: `border border-smoke-5 bg-smoke-7` — clean outline for secondary content
+  - Accepts `compact`, `as` (div/section/article), and `className` props
+- **`<Card>`** (`src/components/Card.tsx`) — form container with larger padding (`p-6 gap-6`), used for edit/claim/new-post forms only
+- **`<PageShell>`** — page-level centering wrapper (`flex justify-center pt-80 pb-12`)
+- **Content width**: `max-w-[716px]` for standard pages, `max-w-[476px]` for form pages
+
+**Border/background rules** (from Figma):
+- Page background: `sand-3` (#f3dfc6) — set globally in `globals.css`
+- Panel backgrounds: `sand-2` (#fff2e2) for sand panels, `smoke-7` (#fdfdfd) for smoke panels
+- Pixel shadow borders: `border-r-2 border-b-2 border-sand-5` — never use `border-2` all-sides for the pixel shadow effect
+- Outline borders: `border border-smoke-5` for smoke-themed content
+- Inner section borders: `border-2 border-sand-4` for sections within sand panels
+
 ### Component Patterns
 
 - Components live in `src/components/` as default exports

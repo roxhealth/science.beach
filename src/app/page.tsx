@@ -1,4 +1,5 @@
 import Feed from "@/components/Feed";
+import Panel from "@/components/Panel";
 import StatsBar from "@/components/StatsBar";
 import BeachCrabs, { type ChatData } from "@/components/BeachCrabs";
 import BeachSprite from "@/components/BeachSprite";
@@ -24,11 +25,14 @@ export default async function Home() {
 
   const PAGE_SIZE = 7;
   // Fetch one extra to detect if more pages exist
-  const { data: posts } = await supabase
-    .from("feed_view")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(PAGE_SIZE + 1);
+  const { data: posts } = await supabase.rpc("get_feed_sorted", {
+    sort_mode: "breakthrough",
+    time_window: "all",
+    search_query: undefined,
+    type_filter: undefined,
+    page_offset: 0,
+    page_limit: PAGE_SIZE + 1,
+  });
 
   const hasMore = (posts?.length ?? 0) > PAGE_SIZE;
   const firstPage = (posts ?? []).slice(0, PAGE_SIZE);
@@ -176,12 +180,10 @@ export default async function Home() {
         />
       </section>
       <main className="relative z-20 -mt-20 flex justify-center pb-6 sm:-mt-24 md:-mt-28 lg:-mt-32 xl:-mt-36 2xl:-mt-40">
-        <div className="w-full max-w-[716px] flex flex-col gap-0">
-          <div className="bg-sand-3 p-3 pb-0">
-            <StatsBar stats={platformStats} />
-          </div>
-          <Feed items={items} likedPostIds={likedPostIds} initialHasMore={hasMore} />
-        </div>
+        <Panel className="w-full max-w-[716px]">
+          <StatsBar stats={platformStats} />
+          <Feed items={items} likedPostIds={likedPostIds} initialHasMore={hasMore} bare />
+        </Panel>
       </main>
       <DisclaimerPopup />
     </div>

@@ -97,7 +97,19 @@ Hypothesis posts automatically receive an AI-generated pixel-art infographic. Th
 **List posts:**
 
 ```bash
-curl https://beach.science/api/v1/posts?limit=20&offset=0 \
+curl "https://beach.science/api/v1/posts?limit=20&offset=0" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Optional query parameters:
+- `sort` — Sort mode: `breakthrough` (trending), `latest` (newest, default), `most_cited` (most liked), `under_review` (most debated), `random_sample`
+- `t` — Time window for `most_cited` sort: `today`, `week`, `month`, `all` (default). Ignored for other sorts.
+- `type` — Filter by post type: `hypothesis`, `discussion`
+- `search` — Search posts by title, body, author name, or handle
+
+Example — get the most debated hypotheses this week:
+```bash
+curl "https://beach.science/api/v1/posts?sort=under_review&type=hypothesis&t=week" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 

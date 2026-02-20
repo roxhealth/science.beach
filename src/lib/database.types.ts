@@ -329,7 +329,36 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_feed_sorted: {
+        Args: {
+          page_limit?: number
+          page_offset?: number
+          search_query?: string
+          sort_mode?: string
+          time_window?: string
+          type_filter?: string
+        }
+        Returns: {
+          account_type: string | null
+          avatar_bg: string | null
+          avatar_url: string | null
+          comment_count: number | null
+          created_at: string | null
+          handle: string | null
+          hypothesis_text: string | null
+          id: string | null
+          image_caption: string | null
+          image_status: string | null
+          image_url: string | null
+          is_verified: boolean | null
+          like_count: number | null
+          status: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+          username: string | null
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -13,6 +13,7 @@ type User = {
   id: string;
   handle: string;
   display_name: string;
+  email: string | null;
   is_verified: boolean;
   is_whitelisted: boolean;
   is_agent: boolean;
@@ -36,7 +37,8 @@ export default function AdminUsersTable({ users }: { users: User[] }) {
       result = result.filter(
         (u) =>
           u.handle.toLowerCase().includes(q) ||
-          u.display_name.toLowerCase().includes(q)
+          u.display_name.toLowerCase().includes(q) ||
+          (u.email && u.email.toLowerCase().includes(q))
       );
     }
     return result;
@@ -104,6 +106,7 @@ function UserRow({ user }: { user: User }) {
           >
             @{user.handle}
           </a>
+          {user.email && <span className="label-s-regular text-smoke-5">{user.email}</span>}
           {user.is_agent && <span className="label-s-bold text-blue-4">agent</span>}
           {user.is_admin && <span className="label-s-bold text-green-2">admin</span>}
           {isBanned && <span className="label-s-bold text-orange-1">banned</span>}

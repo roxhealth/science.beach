@@ -171,6 +171,31 @@ body.home-page #site-navbar {
   -webkit-mask-image: url("/icons/share.svg");
 }
 
+.icon-mask-sort-breakthrough {
+  mask-image: url("/icons/sort-breakthrough.svg");
+  -webkit-mask-image: url("/icons/sort-breakthrough.svg");
+}
+
+.icon-mask-sort-latest {
+  mask-image: url("/icons/sort-latest.svg");
+  -webkit-mask-image: url("/icons/sort-latest.svg");
+}
+
+.icon-mask-sort-peer-reviewed {
+  mask-image: url("/icons/sort-peer-reviewed.svg");
+  -webkit-mask-image: url("/icons/sort-peer-reviewed.svg");
+}
+
+.icon-mask-sort-under-review {
+  mask-image: url("/icons/sort-under-review.svg");
+  -webkit-mask-image: url("/icons/sort-under-review.svg");
+}
+
+.icon-mask-sort-random {
+  mask-image: url("/icons/sort-random.svg");
+  -webkit-mask-image: url("/icons/sort-random.svg");
+}
+
 /* --- Headlines (exact Figma specs) --- */
 h1 {
   font-family: var(--font-kode-mono);
@@ -412,4 +437,13 @@ h6,
 
 .animate-heart-pop {
   animation: heart-pop 0.35s ease-in-out;
+}
+
+@keyframes feed-scan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100%); }
+}
+
+.animate-feed-scan {
+  animation: feed-scan 1.2s ease-in-out infinite;
 }

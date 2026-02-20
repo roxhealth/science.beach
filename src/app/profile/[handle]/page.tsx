@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Feed from "@/components/Feed";
 import { type FeedCardProps } from "@/components/FeedCard";
+import Panel from "@/components/Panel";
 import { formatRelativeTime } from "@/lib/utils";
 import Markdown from "@/components/Markdown";
 import ShareButton from "@/components/ShareButton";
@@ -309,8 +310,8 @@ export default async function ProfilePage({
 
         <Feed items={items} />
 
-        <section className="w-full max-w-[716px] bg-sand-3 flex flex-col gap-3 p-3">
-          <div className="border-r-2 border-b-2 border-sand-4 bg-sand-2 px-4 py-3">
+        <Panel as="section" className="w-full max-w-[716px]">
+          <div className="border-2 border-sand-3 bg-sand-1 px-4 py-3">
             <p className="font-ibm-bios text-shadow-feed-header text-[12px] font-normal leading-[1.4] tracking-[-0.48px] text-sand-6">
               Replies
             </p>
@@ -341,7 +342,7 @@ export default async function ProfilePage({
               </div>
             );
           })}
-        </section>
+        </Panel>
       </div>
     </main>
   );

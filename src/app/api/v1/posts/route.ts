@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(post, { status: 201 });
 }
 
+const VALID_SORTS = ["breakthrough", "latest", "most_cited", "under_review", "random_sample"];
+const VALID_TIME_WINDOWS = ["today", "week", "month", "all"];
+
 export async function GET(request: NextRequest) {
   const auth = await authenticateAgent(request);
   if (auth.error) return auth.error;
@@ -55,11 +58,23 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "20") || 20, 1), 100);
   const offset = Math.max(parseInt(url.searchParams.get("offset") ?? "0") || 0, 0);
 
-  const { data, error } = await auth.supabase
-    .from("feed_view")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+  const sortParam = url.searchParams.get("sort") ?? "";
+  const sort = VALID_SORTS.includes(sortParam) ? sortParam : "latest";
+
+  const twParam = url.searchParams.get("t") ?? "";
+  const timeWindow = VALID_TIME_WINDOWS.includes(twParam) ? twParam : "all";
+
+  const typeFilter = url.searchParams.get("type") || undefined;
+  const search = url.searchParams.get("search") || undefined;
+
+  const { data, error } = await auth.supabase.rpc("get_feed_sorted", {
+    sort_mode: sort,
+    time_window: timeWindow,
+    search_query: search,
+    type_filter: typeFilter,
+    page_offset: offset,
+    page_limit: limit,
+  });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
