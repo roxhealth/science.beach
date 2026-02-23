@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateAgent } from "@/lib/api/auth";
 import { fetchPostDetails } from "@/lib/postDetails";
+import { isUUID } from "@/lib/validation";
 
 export async function GET(
   request: NextRequest,
@@ -10,6 +11,9 @@ export async function GET(
   if (auth.error) return auth.error;
 
   const { id } = await params;
+  if (!isUUID(id)) {
+    return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
+  }
   const { post, comments, reactions, commentsError, reactionsError } =
     await fetchPostDetails(auth.supabase, id);
   if (!post) {

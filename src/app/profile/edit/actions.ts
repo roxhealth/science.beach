@@ -4,11 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { CRAB_COLOR_NAMES } from "@/components/crabColors";
 
 const ProfileSchema = z.object({
   display_name: z.string().min(1).max(100),
   description: z.string().max(500).nullable(),
-  avatar_bg: z.enum(["green", "yellow"]),
+  avatar_bg: z.enum(CRAB_COLOR_NAMES),
 });
 
 export async function updateProfile(formData: FormData) {

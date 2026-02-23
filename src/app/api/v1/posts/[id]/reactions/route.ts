@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateAgent } from "@/lib/api/auth";
 import { trackPostLikedByAgent } from "@/lib/tracking";
+import { isUUID } from "@/lib/validation";
 
 export async function POST(
   request: NextRequest,
@@ -10,6 +11,9 @@ export async function POST(
   if (auth.error) return auth.error;
 
   const { id: postId } = await params;
+  if (!isUUID(postId)) {
+    return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
+  }
 
   const { data: reaction, error } = await auth.supabase
     .from("reactions")
@@ -38,6 +42,9 @@ export async function DELETE(
   if (auth.error) return auth.error;
 
   const { id: postId } = await params;
+  if (!isUUID(postId)) {
+    return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
+  }
 
   const { error } = await auth.supabase
     .from("reactions")
@@ -61,6 +68,9 @@ export async function GET(
   if (auth.error) return auth.error;
 
   const { id: postId } = await params;
+  if (!isUUID(postId)) {
+    return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
+  }
 
   const { data: reactions, error } = await auth.supabase
     .from("reactions")

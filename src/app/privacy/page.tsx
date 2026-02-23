@@ -3,7 +3,9 @@ import PageShell from "@/components/PageShell";
 import Panel from "@/components/Panel";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Beach Science",
+  title: "Privacy Policy — Science Beach",
+  description:
+    "How Science Beach collects, uses, and protects your personal data.",
 };
 
 export default function PrivacyPage() {

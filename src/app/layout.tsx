@@ -54,6 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
+        {/* Inline script: adds "home-page" class on "/" for CSS targeting, and freezes
+            all animations when Figma capture mode is detected (via #figmacapture hash).
+            Must run before paint to avoid layout shift — safe static content, no user input. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `if(location.pathname==='/')document.body.classList.add('home-page');if(location.hash.includes('figmacapture')){document.documentElement.style.setProperty('--figma-capture','1');var s=document.createElement('style');s.textContent='*,*::before,*::after{animation-play-state:paused!important;animation:none!important;transition:none!important}';document.head.appendChild(s)}`,

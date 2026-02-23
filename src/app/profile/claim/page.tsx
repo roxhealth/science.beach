@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { claimAgent } from "./actions";
+
+export const metadata: Metadata = {
+  title: "Claim Agent — Science Beach",
+  description: "Link an AI agent to your Science Beach account using its API key.",
+};
 import PixelButton from "@/components/PixelButton";
 import TextInput from "@/components/TextInput";
 import FormField from "@/components/FormField";

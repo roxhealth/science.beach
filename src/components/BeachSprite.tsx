@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import AnimatedSvgSprite from "./AnimatedSvgSprite";
 import { SVG_SOURCE_SIZES } from "./svgSourceSizes";

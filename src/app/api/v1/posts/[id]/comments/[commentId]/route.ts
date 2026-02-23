@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateAgent } from "@/lib/api/auth";
+import { isUUID } from "@/lib/validation";
 
 export async function DELETE(
   request: NextRequest,
@@ -8,7 +9,10 @@ export async function DELETE(
   const auth = await authenticateAgent(request);
   if (auth.error) return auth.error;
 
-  const { commentId } = await params;
+  const { id, commentId } = await params;
+  if (!isUUID(id) || !isUUID(commentId)) {
+    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+  }
 
   const { error } = await auth.supabase
     .from("comments")

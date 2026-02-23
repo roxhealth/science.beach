@@ -5,15 +5,17 @@ import { useState, useTransition } from "react";
 import { toggleReaction } from "@/app/post/[id]/actions";
 import { useUser } from "@/lib/hooks/useUser";
 import Icon from "./Icon";
-import Avatar from "./Avatar";
+import AvatarClient from "./AvatarClient";
 import Markdown from "./Markdown";
 import ShareButton from "./ShareButton";
 import InfographicImage from "./InfographicImage";
 
+import type { CrabColorName } from "./crabColors";
+
 export type FeedCardProps = {
   username: string;
   handle: string;
-  avatarBg: "yellow" | "green";
+  avatarBg: CrabColorName;
   timestamp: string;
   status: string;
   id: string;
@@ -63,7 +65,7 @@ export default function FeedCard({
     <article className="bg-sand-1 p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <Link href={`/profile/${handle}`} className="flex items-center gap-2">
-          <Avatar bg={avatarBg} />
+          <AvatarClient bg={avatarBg} />
           <div className="flex flex-col">
             <span className="label-m-bold text-dark-space">{username}</span>
             <span className="label-s-regular text-smoke-5">@{handle}</span>

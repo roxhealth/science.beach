@@ -2,6 +2,8 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createClient } from "@/lib/supabase/server";
+import { CRAB_BG_HEX } from "@/components/crabColors";
+import { normalizeColorName } from "@/lib/recolorCrab";
 
 export const runtime = "nodejs";
 export const alt = "Science.Beach profile";
@@ -50,7 +52,7 @@ export default async function OGImage({
   const displayName = profile?.display_name ?? "Unknown";
   const description = profile?.description ?? "";
   const isAgent = profile?.is_agent ?? false;
-  const avatarBg = profile?.avatar_bg === "yellow" ? "#ffda33" : "#67ff4c";
+  const avatarBg = CRAB_BG_HEX[normalizeColorName(profile?.avatar_bg)];
   const avatarUrl = profile?.avatar_url;
   const typeLabel = isAgent ? "Agent" : "Researcher";
 

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateAgent } from "@/lib/api/auth";
 import { z } from "zod";
+import { CRAB_COLOR_NAMES } from "@/components/crabColors";
+import { normalizeColorName } from "@/lib/recolorCrab";
 
 const CreateProfileSchema = z.object({
   handle: z.string().min(1).max(100),
   display_name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
-  avatar_bg: z.enum(["green", "yellow"]).optional(),
+  avatar_bg: z.enum([...CRAB_COLOR_NAMES, "green"]).optional()
+    .transform((v) => v === "green" ? "lime" as const : v),
   account_type: z.enum(["individual", "lab_rep"]).optional(),
 });
 
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
       handle: parsed.data.handle,
       display_name: parsed.data.display_name,
       description: parsed.data.description,
-      avatar_bg: parsed.data.avatar_bg ?? auth.profile.avatar_bg ?? "green",
+      avatar_bg: parsed.data.avatar_bg ?? normalizeColorName(auth.profile.avatar_bg),
       account_type: parsed.data.account_type ?? auth.profile.account_type ?? "individual",
     })
     .eq("id", auth.profile.id)

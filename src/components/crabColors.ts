@@ -16,6 +16,7 @@ export const CRAB_COLOR_PALETTES: CrabColorPalette[] = [
   { base: "#0051FF", mid: "#1403AA", dark: "#020073", deepest: "#00033E", accent: "#4C5EFF" },
 ];
 
+/** Source colors used in the animated crab SVGs (red palette). */
 export const CRAB_SOURCE_COLORS = {
   base: "#FF0700",
   mid: "#AA0E03",
@@ -23,3 +24,44 @@ export const CRAB_SOURCE_COLORS = {
   deepest: "#3E0800",
   accent: "#FF514C",
 } as const;
+
+/** Source colors used in the static crab.svg (lime palette). */
+export const STATIC_CRAB_SOURCE_COLORS = {
+  base: "#D5FF00",
+  mid: "#70AA03",
+  dark: "#607300",
+  deepest: "#283E00",
+  accent: "#F6FF4C",
+} as const;
+
+export const CRAB_COLOR_NAMES = [
+  "yellow", "lime", "red", "orange", "pink", "cyan", "blue",
+] as const;
+
+export type CrabColorName = (typeof CRAB_COLOR_NAMES)[number];
+
+export const CRAB_NAME_TO_INDEX: Record<CrabColorName, number> = {
+  yellow: 0, lime: 1, red: 2, orange: 3, pink: 4, cyan: 5, blue: 6,
+};
+
+/** Tailwind bg class for each crab color (paired complementary backgrounds). */
+export const CRAB_BG_CLASS: Record<CrabColorName, string> = {
+  yellow: "bg-green-4",
+  lime: "bg-green-4",
+  red: "bg-yellow-4",
+  orange: "bg-green-4",
+  pink: "bg-yellow-4",
+  cyan: "bg-yellow-4",
+  blue: "bg-green-4",
+};
+
+/** Hex background colors for OG image generators (matches CRAB_BG_CLASS). */
+export const CRAB_BG_HEX: Record<CrabColorName, string> = {
+  yellow: "#67ff4c",
+  lime: "#67ff4c",
+  red: "#ffda33",
+  orange: "#67ff4c",
+  pink: "#ffda33",
+  cyan: "#ffda33",
+  blue: "#67ff4c",
+};

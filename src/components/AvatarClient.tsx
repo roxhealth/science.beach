@@ -1,6 +1,7 @@
+"use client";
+
 import Image from "next/image";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { useEffect, useMemo, useState } from "react";
 import { SVG_SOURCE_SIZES } from "./svgSourceSizes";
 import { CRAB_BG_CLASS } from "./crabColors";
 import {
@@ -9,15 +10,12 @@ import {
   normalizeColorName,
 } from "@/lib/recolorCrab";
 
-let cachedSvgText: string | null = null;
-async function getStaticCrabSvg(): Promise<string> {
-  if (!cachedSvgText) {
-    cachedSvgText = await readFile(
-      join(process.cwd(), "public/crab.svg"),
-      "utf-8",
-    );
+let crabSvgPromise: Promise<string> | null = null;
+function loadStaticCrabSvg(): Promise<string> {
+  if (!crabSvgPromise) {
+    crabSvgPromise = fetch("/crab.svg").then((r) => r.text());
   }
-  return cachedSvgText;
+  return crabSvgPromise;
 }
 
 const SIZES = {
@@ -43,18 +41,26 @@ const SIZES = {
   },
 } as const;
 
-type AvatarProps = {
+type AvatarClientProps = {
   bg?: string | null;
   size?: keyof typeof SIZES;
 };
 
-export default async function Avatar({ bg, size = "md" }: AvatarProps) {
+export default function AvatarClient({ bg, size = "md" }: AvatarClientProps) {
+  const [svgText, setSvgText] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadStaticCrabSvg().then(setSvgText);
+  }, []);
+
   const colorName = normalizeColorName(bg);
-  const svgText = await getStaticCrabSvg();
-  const recolored = recolorStaticCrabSvg(svgText, colorName);
-  const src = svgToDataUri(recolored);
   const bgClass = CRAB_BG_CLASS[colorName];
   const { box, imgW, imgH } = SIZES[size];
+
+  const src = useMemo(() => {
+    if (!svgText) return "/crab.svg";
+    return svgToDataUri(recolorStaticCrabSvg(svgText, colorName));
+  }, [svgText, colorName]);
 
   return (
     <div

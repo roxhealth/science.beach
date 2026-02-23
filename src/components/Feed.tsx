@@ -16,10 +16,11 @@ type FeedProps = {
   likedPostIds?: string[];
   initialHasMore?: boolean;
   bare?: boolean;
+  hideFilters?: boolean;
   className?: string;
 };
 
-export default function Feed({ items, likedPostIds = [], initialHasMore = false, bare = false, className = "" }: FeedProps) {
+export default function Feed({ items, likedPostIds = [], initialHasMore = false, bare = false, hideFilters = false, className = "" }: FeedProps) {
   const [allItems, setAllItems] = useState(items);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isPending, startTransition] = useTransition();
@@ -146,48 +147,52 @@ export default function Feed({ items, likedPostIds = [], initialHasMore = false,
 
   return (
     <Wrapper {...wrapperProps}>
-      {/* Sort bar */}
-      <div className="border-2 border-sand-3 bg-sand-1 px-4 py-3 flex flex-col gap-2">
-        <SortBar
-          activeSort={sortMode}
-          activeTimeWindow={timeWindow}
-          onSortChange={handleSortChange}
-          onTimeWindowChange={handleTimeWindowChange}
-        />
-      </div>
+      {!hideFilters && (
+        <>
+          {/* Sort bar */}
+          <div className="border-2 border-sand-3 bg-sand-1 px-4 py-3 flex flex-col gap-2">
+            <SortBar
+              activeSort={sortMode}
+              activeTimeWindow={timeWindow}
+              onSortChange={handleSortChange}
+              onTimeWindowChange={handleTimeWindowChange}
+            />
+          </div>
 
-      {/* Search and type filters */}
-      <div className="flex flex-col gap-2 bg-sand-1 border-2 border-sand-3 p-3">
-        <input
-          type="text"
-          placeholder="Search by title, author..."
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="border-2 border-sand-4 bg-sand-1 px-3 py-1.5 mono-s text-dark-space focus:outline-none focus:border-blue-4"
-        />
-        <div className="flex gap-0 w-full sm:w-auto">
-          {(["all", "hypothesis", "discussion"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => handleTypeChange(f)}
-              className={`label-s-regular flex-1 sm:flex-initial px-3 py-1 border transition-colors capitalize ${
-                typeFilter === f
-                  ? "bg-dark-space text-light-space border-dark-space"
-                  : "bg-smoke-7 text-smoke-2 border-smoke-5 hover:bg-smoke-6"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        {(search || typeFilter !== "all") && (
-          <p className="label-s-regular text-smoke-5">
-            {allItems.length} result{allItems.length !== 1 ? "s" : ""}
-            {hasMore ? "+" : ""}
-            {isPending ? " ..." : ""}
-          </p>
-        )}
-      </div>
+          {/* Search and type filters */}
+          <div className="flex flex-col gap-2 bg-sand-1 border-2 border-sand-3 p-3">
+            <input
+              type="text"
+              placeholder="Search by title, author..."
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="border-2 border-sand-4 bg-sand-1 px-3 py-1.5 mono-s text-dark-space focus:outline-none focus:border-blue-4"
+            />
+            <div className="flex gap-0 w-full sm:w-auto">
+              {(["all", "hypothesis", "discussion"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => handleTypeChange(f)}
+                  className={`label-s-regular flex-1 sm:flex-initial px-3 py-1 border transition-colors capitalize ${
+                    typeFilter === f
+                      ? "bg-dark-space text-light-space border-dark-space"
+                      : "bg-smoke-7 text-smoke-2 border-smoke-5 hover:bg-smoke-6"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            {(search || typeFilter !== "all") && (
+              <p className="label-s-regular text-smoke-5">
+                {allItems.length} result{allItems.length !== 1 ? "s" : ""}
+                {hasMore ? "+" : ""}
+                {isPending ? " ..." : ""}
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Loading state */}
       {isPending && allItems.length === 0 && (

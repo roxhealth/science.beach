@@ -1,11 +1,17 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { updateProfile } from "./actions";
+
+export const metadata: Metadata = {
+  title: "Edit Profile — Science Beach",
+  description: "Update your Science Beach profile details.",
+};
 import PixelButton from "@/components/PixelButton";
 import TextInput from "@/components/TextInput";
 import TextArea from "@/components/TextArea";
-import Select from "@/components/Select";
 import FormField from "@/components/FormField";
+import CrabColorPicker from "@/components/CrabColorPicker";
 import Card from "@/components/Card";
 import PageShell from "@/components/PageShell";
 import ErrorBanner from "@/components/ErrorBanner";
@@ -40,11 +46,8 @@ export default async function EditProfilePage({
           <FormField label="Description">
             <TextArea name="description" rows={4} maxLength={500} defaultValue={profile.description ?? ""} placeholder="Tell the beach about yourself..." />
           </FormField>
-          <FormField label="Avatar Color">
-            <Select name="avatar_bg" defaultValue={profile.avatar_bg ?? "green"}>
-              <option value="green">Green</option>
-              <option value="yellow">Yellow</option>
-            </Select>
+          <FormField label="Crab Color">
+            <CrabColorPicker name="avatar_bg" defaultValue={profile.avatar_bg} />
           </FormField>
 
           <PixelButton type="submit" bg="green-4" textColor="green-2" shadowColor="green-2" textShadowTop="green-3" textShadowBottom="green-5">

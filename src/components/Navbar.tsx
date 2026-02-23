@@ -10,11 +10,11 @@ export default async function Navbar() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let profile: { handle: string; display_name: string; is_admin: boolean } | null = null;
+  let profile: { handle: string; display_name: string; is_admin: boolean; avatar_bg: string | null } | null = null;
   if (user) {
     const { data } = await supabase
       .from("profiles")
-      .select("handle, display_name, is_admin")
+      .select("handle, display_name, is_admin, avatar_bg")
       .eq("id", user.id)
       .single();
     profile = data;
@@ -67,7 +67,7 @@ export default async function Navbar() {
                 New Hypotheses
               </PixelButton>
             </Link>
-            <UserMenu displayName={profile.display_name} handle={profile.handle} />
+            <UserMenu displayName={profile.display_name} handle={profile.handle} avatarBg={profile.avatar_bg} />
           </>
         ) : (
           <>

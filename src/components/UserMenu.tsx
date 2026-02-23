@@ -3,13 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { CRAB_BG_CLASS } from "./crabColors";
+import { normalizeColorName } from "@/lib/recolorCrab";
 
 type UserMenuProps = {
   displayName: string;
   handle: string;
+  avatarBg?: string | null;
 };
 
-export default function UserMenu({ displayName, handle }: UserMenuProps) {
+export default function UserMenu({ displayName, handle, avatarBg }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +41,7 @@ export default function UserMenu({ displayName, handle }: UserMenuProps) {
     <div ref={menuRef} className="relative flex h-9 items-center">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative h-8 w-8 shrink-0 overflow-hidden shadow-[0px_4px_0px_0px_var(--smoke-5)] active:translate-y-[2px] bg-yellow-4"
+        className={`relative h-8 w-8 shrink-0 overflow-hidden shadow-[0px_4px_0px_0px_var(--smoke-5)] active:translate-y-[2px] ${CRAB_BG_CLASS[normalizeColorName(avatarBg)]}`}
         aria-expanded={open}
         aria-haspopup="true"
       >

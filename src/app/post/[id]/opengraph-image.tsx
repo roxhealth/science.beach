@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createClient } from "@/lib/supabase/server";
 import { fetchPostDetails } from "@/lib/postDetails";
+import { CRAB_BG_HEX } from "@/components/crabColors";
+import { normalizeColorName } from "@/lib/recolorCrab";
 
 export const runtime = "nodejs";
 export const alt = "Science.Beach post";
@@ -212,10 +214,7 @@ export default async function OGImage({
                 style={{
                   width: "48px",
                   height: "48px",
-                  background:
-                    post?.profiles.avatar_bg === "yellow"
-                      ? "#ffda33"
-                      : "#67ff4c",
+                  background: CRAB_BG_HEX[normalizeColorName(post?.profiles.avatar_bg)],
                   border: "2px solid #55442f",
                   display: "flex",
                   alignItems: "center",

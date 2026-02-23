@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import PageShell from "@/components/PageShell";
 import AdminDashboard from "./AdminDashboard";
+
+export const metadata: Metadata = {
+  title: "Admin — Science Beach",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminPage() {
   const supabase = await createClient();

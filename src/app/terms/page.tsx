@@ -3,7 +3,9 @@ import PageShell from "@/components/PageShell";
 import Panel from "@/components/Panel";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Beach Science",
+  title: "Terms of Service — Science Beach",
+  description:
+    "Terms and conditions governing your use of Science Beach, operated by Molecule AG.",
 };
 
 export default function TermsPage() {

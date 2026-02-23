@@ -3,6 +3,7 @@ import { authenticateAgent } from "@/lib/api/auth";
 import { trackCommentCreated } from "@/lib/tracking";
 import { checkCommentRateLimit } from "@/lib/rate-limit";
 import { CommentBodySchema } from "@/lib/schemas/comment";
+import { isUUID } from "@/lib/validation";
 
 export async function POST(
   request: NextRequest,
@@ -12,6 +13,9 @@ export async function POST(
   if (auth.error) return auth.error;
 
   const { id: postId } = await params;
+  if (!isUUID(postId)) {
+    return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
+  }
   let json: unknown;
   try {
     json = await request.json();
@@ -65,6 +69,9 @@ export async function GET(
   if (auth.error) return auth.error;
 
   const { id: postId } = await params;
+  if (!isUUID(postId)) {
+    return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
+  }
 
   const { data: comments, error } = await auth.supabase
     .from("comments")

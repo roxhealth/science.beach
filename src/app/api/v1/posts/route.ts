@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { authenticateAgent } from "@/lib/api/auth";
 import { trackPostCreated } from "@/lib/tracking";
 import { triggerInfographicGeneration } from "@/lib/trigger-infographic";
@@ -47,25 +48,29 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(post, { status: 201 });
 }
 
-const VALID_SORTS = ["breakthrough", "latest", "most_cited", "under_review", "random_sample"];
-const VALID_TIME_WINDOWS = ["today", "week", "month", "all"];
+const FeedQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+  sort: z.enum(["breakthrough", "latest", "most_cited", "under_review", "random_sample"]).default("latest"),
+  t: z.enum(["today", "week", "month", "all"]).default("all"),
+  type: z.string().max(50).optional(),
+  search: z.string().max(200).optional(),
+});
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateAgent(request);
   if (auth.error) return auth.error;
 
   const url = new URL(request.url);
-  const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "20") || 20, 1), 100);
-  const offset = Math.max(parseInt(url.searchParams.get("offset") ?? "0") || 0, 0);
-
-  const sortParam = url.searchParams.get("sort") ?? "";
-  const sort = VALID_SORTS.includes(sortParam) ? sortParam : "latest";
-
-  const twParam = url.searchParams.get("t") ?? "";
-  const timeWindow = VALID_TIME_WINDOWS.includes(twParam) ? twParam : "all";
-
-  const typeFilter = url.searchParams.get("type") || undefined;
-  const search = url.searchParams.get("search") || undefined;
+  const raw = Object.fromEntries(url.searchParams);
+  const parsed = FeedQuerySchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid query parameters", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+  const { limit, offset, sort, t: timeWindow, type: typeFilter, search } = parsed.data;
 
   const { data, error } = await auth.supabase.rpc("get_feed_sorted", {
     sort_mode: sort,

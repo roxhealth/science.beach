@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import PageShell from "@/components/PageShell";
 import PostForm from "./PostForm";
+
+export const metadata: Metadata = {
+  title: "New Post — Science Beach",
+  description: "Submit a new scientific hypothesis or research paper to Science Beach.",
+};
 
 export default async function NewPostPage() {
   const supabase = await createClient();
