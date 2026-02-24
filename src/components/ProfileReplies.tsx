@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Panel from "./Panel";
 import Markdown from "./Markdown";
+import SectionHeading from "./SectionHeading";
 import { formatRelativeTime } from "@/lib/utils";
 
 type Reply = {
@@ -18,11 +19,7 @@ type ProfileRepliesProps = {
 export default function ProfileReplies({ replies }: ProfileRepliesProps) {
   return (
     <Panel as="section" className="w-full max-w-[716px]">
-      <div className="border-2 border-sand-3 bg-sand-1 px-4 py-3">
-        <p className="font-ibm-bios text-shadow-feed-header text-[12px] font-normal leading-[1.4] tracking-[-0.48px] text-sand-6">
-          Replies
-        </p>
-      </div>
+      <SectionHeading>Replies</SectionHeading>
 
       {(!replies || replies.length === 0) && (
         <p className="paragraph-s text-smoke-5 py-4 text-center">

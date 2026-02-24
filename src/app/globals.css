@@ -152,8 +152,8 @@ body.home-page #site-navbar {
   text-shadow: 0px -1px 0px var(--dark-space), 0px 1px 0px var(--blue-2);
 }
 
-.text-shadow-feed-header {
-  text-shadow: 0px -1px 0px var(--smoke-5), 0px 1px 0px var(--smoke-7);
+.text-shadow-section-heading {
+  text-shadow: 0px -1px 0px var(--sand-3), 0px 1px 0px var(--sand-1);
 }
 
 .text-shadow-bubble {

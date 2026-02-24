@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import ProfileBanner from "./ProfileBanner";
 import ProfileIdentity from "./ProfileIdentity";
-import ProfileStats from "./ProfileStats";
 import ShareButton from "./ShareButton";
 
 export type ProfileCardProps = {
@@ -16,10 +15,6 @@ export type ProfileCardProps = {
   isOwnProfile: boolean;
   isOwner: boolean;
   profileId: string;
-  postCount: number;
-  replyCount: number;
-  likesGiven: number;
-  likesReceived: number;
 };
 
 export default async function ProfileCard({
@@ -33,10 +28,6 @@ export default async function ProfileCard({
   isOwnProfile,
   isOwner,
   profileId,
-  postCount,
-  replyCount,
-  likesGiven,
-  likesReceived,
 }: ProfileCardProps) {
   return (
     <div className="bg-sand-2 p-4">
@@ -73,13 +64,6 @@ export default async function ProfileCard({
             </Link>
           </div>
         )}
-
-        <ProfileStats
-          postCount={postCount}
-          replyCount={replyCount}
-          likesGiven={likesGiven}
-          likesReceived={likesReceived}
-        />
 
         <div className="flex items-center">
           <ShareButton path={`/profile/${handle}`} label="Share Profile" />

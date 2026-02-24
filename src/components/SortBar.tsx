@@ -20,22 +20,28 @@ export default function SortBar({
 }: SortBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const activeConfig = SORT_MODES.find((m) => m.value === activeSort);
+  const baseSortBtnClass =
+    "label-s-bold flex items-center gap-1.5 border px-2.5 py-1 min-h-8 leading-[0.9] transition-colors";
+  const activeSortBtnClass =
+    "bg-blue-4 text-light-space border-blue-4 shadow-[0px_4px_0px_0px_var(--blue-5)]";
+  const inactiveSortBtnClass =
+    "bg-smoke-6 text-orange-1 border-smoke-5 shadow-[0px_4px_0px_0px_#3d3d3d] hover:bg-smoke-7";
+  const baseTimeBtnClass =
+    "label-s-regular px-2.5 py-1 min-h-8 leading-[0.9] border transition-colors";
 
   return (
     <div className="flex flex-col gap-2">
       {/* Sort mode buttons — desktop */}
-      <div className="hidden sm:flex gap-0">
+      <div className="hidden w-full sm:flex gap-0.5">
         {SORT_MODES.map((mode) => {
           const isActive = activeSort === mode.value;
           return (
             <button
               key={mode.value}
               onClick={() => onSortChange(mode.value)}
-              className={`label-s-bold flex items-center gap-1.5 px-3 py-1.5 border transition-colors ${
-                isActive
-                  ? "bg-dark-space text-light-space border-dark-space"
-                  : "bg-smoke-7 text-smoke-2 border-smoke-5 hover:bg-smoke-6"
-              }`}
+              className={`${baseSortBtnClass} ${
+                isActive ? activeSortBtnClass : inactiveSortBtnClass
+              } flex-1 justify-center`}
               title={mode.description}
             >
               <Icon name={mode.icon} size={12} />
@@ -49,7 +55,7 @@ export default function SortBar({
       <div className="sm:hidden">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="label-s-bold flex w-full items-center justify-between gap-1.5 border border-smoke-5 bg-smoke-7 px-3 py-1.5 text-smoke-2 transition-colors"
+          className={`${baseSortBtnClass} ${activeSortBtnClass} w-full justify-between`}
         >
           <span className="flex items-center gap-1.5">
             <Icon name={activeConfig?.icon ?? "sort-breakthrough"} size={12} />
@@ -68,10 +74,10 @@ export default function SortBar({
                     onSortChange(mode.value);
                     setMobileOpen(false);
                   }}
-                  className={`label-s-regular flex items-center gap-1.5 px-3 py-1.5 transition-colors ${
+                  className={`label-s-regular flex items-center gap-1.5 px-2.5 py-1.5 transition-colors ${
                     isActive
-                      ? "bg-dark-space text-light-space"
-                      : "bg-smoke-7 text-smoke-2 hover:bg-smoke-6"
+                      ? "bg-blue-4 text-light-space"
+                      : "bg-smoke-6 text-orange-1 hover:bg-smoke-7"
                   }`}
                 >
                   <Icon name={mode.icon} size={12} />
@@ -100,10 +106,10 @@ export default function SortBar({
               <button
                 key={tw.value}
                 onClick={() => onTimeWindowChange(tw.value)}
-                className={`label-s-regular flex-1 sm:flex-initial px-3 py-1 border transition-colors ${
+                className={`${baseTimeBtnClass} flex-1 sm:flex-initial ${
                   isActive
-                    ? "bg-dark-space text-light-space border-dark-space"
-                    : "bg-smoke-7 text-smoke-2 border-smoke-5 hover:bg-smoke-6"
+                    ? "bg-blue-4 text-light-space border-blue-4"
+                    : "bg-smoke-6 text-orange-1 border-smoke-5 hover:bg-smoke-7"
                 }`}
               >
                 {tw.label}

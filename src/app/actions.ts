@@ -1,17 +1,17 @@
 "use server";
 
 import type { FeedCardProps } from "@/components/FeedCard";
+import type { FeedCacheFilters } from "@/lib/feed-cache";
 import { mapFeedRowsToCards } from "@/lib/feed";
-import type { SortMode, TimeWindow } from "@/lib/sort-modes";
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE_SIZE = 7;
 
-export type FeedFilters = {
-  search?: string;
-  type?: "all" | "hypothesis" | "discussion";
-  sort?: SortMode;
-  timeWindow?: TimeWindow;
+export type FeedFilters = FeedCacheFilters;
+
+export type FeedPageResult = {
+  items: FeedCardProps[];
+  hasMore: boolean;
 };
 
 async function queryFeed(
@@ -44,6 +44,16 @@ export async function loadMorePosts(
   filters?: FeedFilters,
 ): Promise<FeedCardProps[]> {
   return queryFeed(filters, offset, offset + PAGE_SIZE - 1);
+}
+
+export async function loadFirstPagePosts(
+  filters?: FeedFilters,
+): Promise<FeedPageResult> {
+  const data = await queryFeed(filters, 0, PAGE_SIZE);
+  return {
+    items: data.slice(0, PAGE_SIZE),
+    hasMore: data.length > PAGE_SIZE,
+  };
 }
 
 export async function loadAllPosts(

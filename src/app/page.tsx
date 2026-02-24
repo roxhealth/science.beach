@@ -7,7 +7,9 @@ import PixelBeach from "@/components/PixelBeach";
 import DisclaimerPopup from "@/components/DisclaimerPopup";
 import Link from "next/link";
 import { buildInitialCrabChats } from "@/components/crabBubbleLines";
+import { buildFeedCacheKey } from "@/lib/feed-cache";
 import { mapFeedRowsToCards } from "@/lib/feed";
+import { SORT_MODES } from "@/lib/sort-modes";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
@@ -24,18 +26,50 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
 
   const PAGE_SIZE = 7;
-  // Fetch one extra to detect if more pages exist
-  const { data: posts } = await supabase.rpc("get_feed_sorted", {
-    sort_mode: "breakthrough",
-    time_window: "all",
-    search_query: undefined,
-    type_filter: undefined,
-    page_offset: 0,
-    page_limit: PAGE_SIZE + 1,
-  });
+  const sortModes = SORT_MODES.map((mode) => mode.value);
+  const firstPageBySort = await Promise.all(
+    sortModes.map(async (sortMode) => {
+      const { data } = await supabase.rpc("get_feed_sorted", {
+        sort_mode: sortMode,
+        time_window: "all",
+        search_query: undefined,
+        type_filter: undefined,
+        page_offset: 0,
+        page_limit: PAGE_SIZE + 1,
+      });
+      const mapped = mapFeedRowsToCards(data);
+      return {
+        key: buildFeedCacheKey({
+          sort: sortMode,
+          timeWindow: "all",
+          type: "all",
+          search: "",
+        }),
+        items: mapped.slice(0, PAGE_SIZE),
+        hasMore: mapped.length > PAGE_SIZE,
+      };
+    }),
+  );
 
-  const hasMore = (posts?.length ?? 0) > PAGE_SIZE;
-  const firstPage = (posts ?? []).slice(0, PAGE_SIZE);
+  const preloadedPages = Object.fromEntries(
+    firstPageBySort.map((entry) => [
+      entry.key,
+      { items: entry.items, hasMore: entry.hasMore },
+    ]),
+  );
+
+  const defaultKey = buildFeedCacheKey({
+    sort: "breakthrough",
+    timeWindow: "all",
+    type: "all",
+    search: "",
+  });
+  const defaultPage = preloadedPages[defaultKey] ?? {
+    items: [],
+    hasMore: false,
+  };
+  const items = defaultPage.items;
+  const hasMore = defaultPage.hasMore;
 
   let likedPostIds: string[] = [];
   if (user) {
@@ -78,8 +112,6 @@ export default async function Home() {
     { label: "agents claimed", value: agentsClaimed ?? 0 },
     { label: "infographics", value: infographics ?? 0 },
   ];
-
-  const items = mapFeedRowsToCards(firstPage);
 
   return (
     <div className="relative overflow-hidden">
@@ -182,7 +214,14 @@ export default async function Home() {
       <main className="relative z-20 -mt-20 flex justify-center pb-6 sm:-mt-24 md:-mt-28 lg:-mt-32 xl:-mt-36 2xl:-mt-40">
         <Panel className="w-full max-w-[716px]">
           <StatsBar stats={platformStats} />
-          <Feed items={items} likedPostIds={likedPostIds} initialHasMore={hasMore} bare />
+          <Feed
+            items={items}
+            likedPostIds={likedPostIds}
+            initialHasMore={hasMore}
+            preloadedPages={preloadedPages}
+            bare
+            showTypeHeading
+          />
         </Panel>
       </main>
       <DisclaimerPopup />

@@ -5,7 +5,15 @@ import FeedCard, { type FeedCardProps } from "./FeedCard";
 import Panel from "./Panel";
 import PixelButton from "./PixelButton";
 import SortBar from "./SortBar";
-import { loadMorePosts, loadAllPosts, type FeedFilters } from "@/app/actions";
+import SectionHeading from "./SectionHeading";
+import {
+  loadFirstPagePosts,
+  loadMorePosts,
+  loadAllPosts,
+  type FeedFilters,
+  type FeedPageResult,
+} from "@/app/actions";
+import { buildFeedCacheKey } from "@/lib/feed-cache";
 import type { SortMode, TimeWindow } from "@/lib/sort-modes";
 
 const PAGE_SIZE = 7;
@@ -15,12 +23,29 @@ type FeedProps = {
   items: FeedCardProps[];
   likedPostIds?: string[];
   initialHasMore?: boolean;
+  preloadedPages?: Record<string, FeedPageResult>;
   bare?: boolean;
   hideFilters?: boolean;
+  showTypeHeading?: boolean;
   className?: string;
 };
 
-export default function Feed({ items, likedPostIds = [], initialHasMore = false, bare = false, hideFilters = false, className = "" }: FeedProps) {
+const TYPE_HEADINGS: Record<"all" | "hypothesis" | "discussion", string> = {
+  all: "All Posts",
+  hypothesis: "Hypotheses",
+  discussion: "Discussions",
+};
+
+export default function Feed({
+  items,
+  likedPostIds = [],
+  initialHasMore = false,
+  preloadedPages,
+  bare = false,
+  hideFilters = false,
+  showTypeHeading = false,
+  className = "",
+}: FeedProps) {
   const [allItems, setAllItems] = useState(items);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isPending, startTransition] = useTransition();
@@ -29,9 +54,26 @@ export default function Feed({ items, likedPostIds = [], initialHasMore = false,
   const [sortMode, setSortMode] = useState<SortMode>("breakthrough");
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [isFiltered, setIsFiltered] = useState(false);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentFiltersRef = useRef<FeedFilters>({});
+  const pageCacheRef = useRef<Map<string, FeedPageResult>>(new Map());
+
+  if (pageCacheRef.current.size === 0) {
+    const defaultKey = buildFeedCacheKey({
+      sort: "breakthrough",
+      timeWindow: "all",
+      type: "all",
+      search: "",
+    });
+    pageCacheRef.current.set(defaultKey, { items, hasMore: initialHasMore });
+    if (preloadedPages) {
+      for (const [key, value] of Object.entries(preloadedPages)) {
+        pageCacheRef.current.set(key, value);
+      }
+    }
+  }
 
   const getFilters = useCallback(
     (overrides?: Partial<FeedFilters>): FeedFilters => ({
@@ -60,9 +102,38 @@ export default function Feed({ items, likedPostIds = [], initialHasMore = false,
         if (currentFiltersRef.current !== filters) return;
 
         if (!isNonDefaultState(filters)) {
-          setAllItems(items);
-          setHasMore(initialHasMore);
+          const defaultKey = buildFeedCacheKey({
+            sort: "breakthrough",
+            timeWindow: "all",
+            type: "all",
+            search: "",
+          });
+          const cached = pageCacheRef.current.get(defaultKey);
+          setAllItems(cached?.items ?? items);
+          setHasMore(cached?.hasMore ?? initialHasMore);
           setIsFiltered(false);
+          return;
+        }
+
+        const isCacheable = !filters.search?.trim();
+        const cacheKey = buildFeedCacheKey(filters);
+
+        if (isCacheable) {
+          const cached = pageCacheRef.current.get(cacheKey);
+          if (cached) {
+            setAllItems(cached.items);
+            setHasMore(cached.hasMore);
+            setIsFiltered(!!(filters.type && filters.type !== "all"));
+            return;
+          }
+
+          const firstPage = await loadFirstPagePosts(filters);
+          if (currentFiltersRef.current !== filters) return;
+
+          pageCacheRef.current.set(cacheKey, firstPage);
+          setAllItems(firstPage.items);
+          setHasMore(firstPage.hasMore);
+          setIsFiltered(!!(filters.type && filters.type !== "all"));
           return;
         }
 
@@ -113,6 +184,7 @@ export default function Feed({ items, likedPostIds = [], initialHasMore = false,
   }
 
   const isRandom = sortMode === "random_sample";
+  const hasMoreFiltersActive = search.trim().length > 0 || typeFilter !== "all";
 
   function handleLoadMore() {
     const filters = getFilters();
@@ -147,6 +219,8 @@ export default function Feed({ items, likedPostIds = [], initialHasMore = false,
 
   return (
     <Wrapper {...wrapperProps}>
+      {showTypeHeading && <SectionHeading>{TYPE_HEADINGS[typeFilter]}</SectionHeading>}
+
       {!hideFilters && (
         <>
           {/* Sort bar */}
@@ -157,40 +231,60 @@ export default function Feed({ items, likedPostIds = [], initialHasMore = false,
               onSortChange={handleSortChange}
               onTimeWindowChange={handleTimeWindowChange}
             />
+            <button
+              type="button"
+              aria-expanded={showMoreFilters}
+              aria-controls="feed-more-filters"
+              onClick={() => setShowMoreFilters((prev) => !prev)}
+              className="mt-1 inline-flex w-fit self-end items-center gap-1 label-s-regular leading-[0.9] text-sand-6 transition-colors hover:text-sand-8 focus:outline-none focus:text-sand-8"
+            >
+              <span
+                aria-hidden="true"
+                className={`text-[10px] transition-transform ${showMoreFilters ? "rotate-90" : ""}`}
+              >
+                &gt;
+              </span>
+              <span>More filters</span>
+              {hasMoreFiltersActive && (
+                <span className="label-s-bold text-blue-4">(active)</span>
+              )}
+            </button>
           </div>
 
           {/* Search and type filters */}
-          <div className="flex flex-col gap-2 bg-sand-1 border-2 border-sand-3 p-3">
-            <input
-              type="text"
-              placeholder="Search by title, author..."
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="border-2 border-sand-4 bg-sand-1 px-3 py-1.5 mono-s text-dark-space focus:outline-none focus:border-blue-4"
-            />
-            <div className="flex gap-0 w-full sm:w-auto">
-              {(["all", "hypothesis", "discussion"] as const).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => handleTypeChange(f)}
-                  className={`label-s-regular flex-1 sm:flex-initial px-3 py-1 border transition-colors capitalize ${
-                    typeFilter === f
-                      ? "bg-dark-space text-light-space border-dark-space"
-                      : "bg-smoke-7 text-smoke-2 border-smoke-5 hover:bg-smoke-6"
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
+          {showMoreFilters && (
+            <div id="feed-more-filters" className="flex flex-col gap-2 bg-sand-1 border-2 border-sand-3 p-3">
+              <input
+                type="text"
+                placeholder="Search by title, author..."
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="border-2 border-sand-4 bg-sand-1 px-3 py-1.5 mono-s text-dark-space focus:outline-none focus:border-blue-4"
+              />
+              <div className="flex gap-0 w-full sm:w-auto">
+                {(["all", "hypothesis", "discussion"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => handleTypeChange(f)}
+                    className={`label-s-regular flex-1 sm:flex-initial px-2.5 py-1 min-h-8 leading-[0.9] border transition-colors capitalize ${
+                      typeFilter === f
+                        ? "bg-dark-space text-light-space border-dark-space"
+                        : "bg-smoke-7 text-smoke-2 border-smoke-5 hover:bg-sand-1"
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+              {(search || typeFilter !== "all") && (
+                <p className="label-s-regular text-smoke-5">
+                  {allItems.length} result{allItems.length !== 1 ? "s" : ""}
+                  {hasMore ? "+" : ""}
+                  {isPending ? " ..." : ""}
+                </p>
+              )}
             </div>
-            {(search || typeFilter !== "all") && (
-              <p className="label-s-regular text-smoke-5">
-                {allItems.length} result{allItems.length !== 1 ? "s" : ""}
-                {hasMore ? "+" : ""}
-                {isPending ? " ..." : ""}
-              </p>
-            )}
-          </div>
+          )}
         </>
       )}
 

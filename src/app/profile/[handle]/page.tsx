@@ -7,6 +7,8 @@ import { type FeedCardProps } from "@/components/FeedCard";
 import ProfileCard from "@/components/ProfileCard";
 import ProfileAgents from "@/components/ProfileAgents";
 import ProfileReplies from "@/components/ProfileReplies";
+import ProfileStats from "@/components/ProfileStats";
+import SectionHeading from "@/components/SectionHeading";
 import { formatRelativeTime } from "@/lib/utils";
 import { normalizeColorName } from "@/lib/recolorCrab";
 
@@ -163,16 +165,21 @@ export default async function ProfilePage({
           isOwnProfile={isOwnProfile}
           isOwner={isOwner}
           profileId={profile.id}
-          postCount={postCount}
-          replyCount={replyCount}
-          likesGiven={likesGiven ?? 0}
-          likesReceived={likesReceived ?? 0}
         />
 
         {!isAgent && (
           <ProfileAgents agents={claimedAgents} isOwnProfile={isOwnProfile} />
         )}
 
+        <SectionHeading>Stats</SectionHeading>
+        <ProfileStats
+          postCount={postCount}
+          replyCount={replyCount}
+          likesGiven={likesGiven ?? 0}
+          likesReceived={likesReceived ?? 0}
+        />
+
+        <SectionHeading>All Hypothesis</SectionHeading>
         <Feed items={items} hideFilters />
 
         <ProfileReplies replies={replies} />
