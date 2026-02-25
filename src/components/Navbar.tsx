@@ -41,6 +41,9 @@ export default async function Navbar() {
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap justify-end">
+        <Link href="/docs" className="label-s-regular text-sand-1 hover:text-sand-2 px-2 py-1">
+          API Docs
+        </Link>
         {profile ? (
           <>
             {profile.is_admin && (

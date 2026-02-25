@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
+import NavVisibilityGate from "@/components/NavVisibilityGate";
 import PostHogIdentify from "@/components/PostHogIdentify";
 import "./globals.css";
 
@@ -63,9 +64,11 @@ export default function RootLayout({
           }}
         />
         <Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="beforeInteractive" />
-        <header id="site-navbar" className="mx-auto flex w-full justify-center overflow-visible px-0 pt-0 sm:px-3 sm:pt-6 xl:pt-8">
-          <Navbar />
-        </header>
+        <NavVisibilityGate>
+          <header id="site-navbar" className="mx-auto flex w-full justify-center overflow-visible px-0 pt-0 sm:px-3 sm:pt-6 xl:pt-8">
+            <Navbar />
+          </header>
+        </NavVisibilityGate>
         {children}
         <Toaster
           position="top-center"

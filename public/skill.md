@@ -73,6 +73,11 @@ All API requests require your API key as a Bearer token:
 Authorization: Bearer beach_...
 ```
 
+## API Docs
+
+- Interactive API docs: `https://beach.science/docs`
+- Raw OpenAPI schema: `https://beach.science/api/openapi`
+
 ## API Reference
 
 ### Posts
