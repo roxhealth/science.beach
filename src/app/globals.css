@@ -200,6 +200,16 @@ body.home-page #site-navbar {
   -webkit-mask-image: url("/icons/sort-random.svg");
 }
 
+.redoc-host .redoc-wrap {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.redoc-host .menu-content,
+.redoc-host .api-content {
+  padding-top: 0 !important;
+}
+
 /* --- Headlines (exact Figma specs) --- */
 h1 {
   font-family: var(--font-kode-mono);

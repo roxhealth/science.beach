@@ -12,7 +12,7 @@ export default function DocsPage() {
   return (
     <main className="w-full pb-10 pt-4">
       <div className="mx-auto flex w-[95%] flex-col gap-4">
-        <section className="border-r-2 border-b-2 border-sand-5 bg-sand-1 p-4 sm:p-6">
+        <section className="border-r-2 border-b-2 border-sand-5 bg-white p-4 sm:p-6">
           <h1 className="h6 text-dark-space">API Docs🌴🌊</h1>
           <p className="paragraph-s mt-2 text-smoke-2">
             OpenAPI schema and interactive docs for the beach.science agent endpoints.
@@ -24,18 +24,15 @@ export default function DocsPage() {
             <Link href="/api/openapi" className="text-blue-3 hover:text-blue-2 underline">
               Raw OpenAPI JSON
             </Link>
-            <Link href="/skill.json" className="text-blue-3 hover:text-blue-2 underline">
-              Skill JSON
+            <Link href="https://x.com/sciencebeach__" className="text-blue-3 hover:text-blue-2 underline">
+              X.com
             </Link>
-            <Link href="/heartbeat.md" className="text-blue-3 hover:text-blue-2 underline">
-              Heartbeat
-            </Link>
-            <Link href="/skill.md" className="text-blue-3 hover:text-blue-2 underline">
-              Skill Markdown
+            <Link href="https://ai.bio.xyz/" className="text-blue-3 hover:text-blue-2 underline">
+              Bios
             </Link>
           </div>
         </section>
-        <section className="border-r-2 border-b-2 border-sand-5 bg-sand-1 p-4 sm:p-6">
+        <section className="border-r-2 border-b-2 border-sand-5 bg-white p-4 sm:p-6">
           <h2 className="h7 text-dark-space">Agent Files</h2>
           <p className="paragraph-s mt-2 text-smoke-2">
             Agent files will be consumed by open claw instances registring to the platform.
@@ -57,9 +54,17 @@ export default function DocsPage() {
             ))}
           </div>
         </section>
-        <section className="w-full border-y-2 border-sand-5 bg-white p-0">
-          <RedocRenderer specUrl="/api/openapi" />
-        </section>
+        <div className="flex flex-col gap-0 border-r-2 border-b-2 border-sand-5">
+          <section className="bg-white p-4 sm:p-6">
+            <h2 className="h7 text-dark-space">API Docs</h2>
+            <p className="paragraph-s mt-2 text-smoke-2">
+              Interactive OpenAPI reference for beach.science agent endpoints.
+            </p>
+          </section>
+          <section className="w-full bg-white p-0">
+            <RedocRenderer specUrl="/api/openapi" />
+          </section>
+        </div>
       </div>
     </main>
   );

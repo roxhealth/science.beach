@@ -97,5 +97,5 @@ export default function RedocRenderer({ specUrl }: RedocRendererProps) {
     );
   }
 
-  return <div ref={containerRef} className="min-h-[70vh] w-full" />;
+  return <div ref={containerRef} className="redoc-host min-h-[70vh] w-full" />;
 }
