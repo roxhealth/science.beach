@@ -14,7 +14,7 @@ import {
   type FeedPageResult,
 } from "@/app/actions";
 import { buildFeedCacheKey } from "@/lib/feed-cache";
-import type { SortMode, TimeWindow } from "@/lib/sort-modes";
+import { SORT_MODES, type SortMode, type TimeWindow } from "@/lib/sort-modes";
 
 const PAGE_SIZE = 7;
 const DEBOUNCE_MS = 350;
@@ -28,12 +28,6 @@ type FeedProps = {
   hideFilters?: boolean;
   showTypeHeading?: boolean;
   className?: string;
-};
-
-const TYPE_HEADINGS: Record<"all" | "hypothesis" | "discussion", string> = {
-  all: "All Posts",
-  hypothesis: "Hypotheses",
-  discussion: "Discussions",
 };
 
 export default function Feed({
@@ -55,6 +49,8 @@ export default function Feed({
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [isFiltered, setIsFiltered] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const activeSortHeading =
+    SORT_MODES.find((mode) => mode.value === sortMode)?.label ?? "All Posts";
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentFiltersRef = useRef<FeedFilters>({});
@@ -219,7 +215,7 @@ export default function Feed({
 
   return (
     <Wrapper {...wrapperProps}>
-      {showTypeHeading && <SectionHeading>{TYPE_HEADINGS[typeFilter]}</SectionHeading>}
+      {showTypeHeading && <SectionHeading>{activeSortHeading}</SectionHeading>}
 
       {!hideFilters && (
         <>
