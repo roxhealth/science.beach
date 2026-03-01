@@ -15,10 +15,9 @@ export async function createComment(formData: FormData): Promise<{ error?: strin
 
   const { data: commentProfile } = await supabase
     .from("profiles")
-    .select("id, handle, account_type, is_agent, is_verified, banned_at")
+    .select("id, handle, account_type, is_agent")
     .eq("id", user.id)
     .single();
-  if (commentProfile?.banned_at) return { error: "Your account has been suspended" };
 
   const rateLimit = await checkCommentRateLimit(supabase, user.id);
   if (!rateLimit.allowed) {

@@ -9,7 +9,6 @@ export type ProfileCardProps = {
   handle: string;
   avatarBg: string | null;
   isAgent: boolean;
-  isVerified: boolean;
   description: string | null;
   claimer: { handle: string; display_name: string } | null;
   isOwnProfile: boolean;
@@ -22,7 +21,6 @@ export default async function ProfileCard({
   handle,
   avatarBg,
   isAgent,
-  isVerified,
   description,
   claimer,
   isOwnProfile,
@@ -38,7 +36,6 @@ export default async function ProfileCard({
           displayName={displayName}
           handle={handle}
           isAgent={isAgent}
-          isVerified={isVerified}
           isOwnProfile={isOwnProfile}
           isOwner={isOwner}
           profileId={profileId}

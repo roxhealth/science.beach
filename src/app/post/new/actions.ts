@@ -22,12 +22,11 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, handle, account_type, is_agent, is_verified, banned_at")
+    .select("id, handle, account_type, is_agent")
     .eq("id", user.id)
     .single();
 
   if (!profile) redirect("/login");
-  if (profile.banned_at) return { error: "Your account has been suspended." };
 
   const rateLimit = await checkPostRateLimit(supabase, profile.id);
   if (!rateLimit.allowed) {

@@ -72,48 +72,6 @@ export async function adminDeleteComment(commentId: string, postId: string) {
   revalidatePath(`/post/${postId}`);
 }
 
-export async function adminToggleVerification(profileId: string, currentValue: boolean) {
-  await requireAdmin();
-  const supabase = createAdminClient();
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({ is_verified: !currentValue })
-    .eq("id", profileId);
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/admin");
-}
-
-export async function adminToggleWhitelist(profileId: string, currentValue: boolean) {
-  await requireAdmin();
-  const supabase = createAdminClient();
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({ is_whitelisted: !currentValue })
-    .eq("id", profileId);
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/admin");
-}
-
-export async function adminToggleBan(profileId: string, isBanned: boolean) {
-  await requireAdmin();
-  const supabase = createAdminClient();
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({ banned_at: isBanned ? null : new Date().toISOString() })
-    .eq("id", profileId);
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/admin");
-}
-
 export async function adminDeleteInfographic(postId: string) {
   await requireAdmin();
   const supabase = createAdminClient();

@@ -55,7 +55,6 @@ export async function registerAgentCore(
       display_name: input.name ?? input.handle,
       description: input.description,
       is_agent: true,
-      is_whitelisted: true,
       account_type: "individual",
     })
     .select("id")

@@ -3,25 +3,54 @@
 import { useEffect, useState } from "react";
 import { signInWithGoogle } from "./actions";
 import Image from "next/image";
+import Link from "next/link";
 import PixelWave from "@/components/PixelWave";
+import AgentOnboardingInstructions from "@/components/AgentOnboardingInstructions";
 import { useSearchParams } from "next/navigation";
+import { useUser } from "@/lib/hooks/useUser";
+import { createClient } from "@/lib/supabase/client";
+
+type ProfileSummary = {
+  display_name: string;
+  handle: string;
+};
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const paramMode = searchParams.get("mode") === "agent" ? "agent" : "human";
   const [mode, setMode] = useState<"human" | "agent">(paramMode);
+  const { user } = useUser();
+  const [profile, setProfile] = useState<ProfileSummary | null>(null);
 
   useEffect(() => {
     setMode(paramMode);
   }, [paramMode]);
-  const [copied, setCopied] = useState(false);
 
-  function copyCommand() {
-    navigator.clipboard.writeText("curl -s https://beach.science/skill.md");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfile() {
+      if (!user) {
+        setProfile(null);
+        return;
+      }
+
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, handle")
+        .eq("id", user.id)
+        .single();
+
+      if (!cancelled) setProfile(data ?? null);
+    }
+
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center">
@@ -48,34 +77,82 @@ export default function LoginPage() {
             {/* Cards */}
             <div className="flex gap-1">
               {/* Human card */}
-              <button
-                type="button"
-                onClick={() => setMode("human")}
-                className={`flex-1 border border-solid border-sand-4 p-4 flex flex-col items-center gap-4 transition-all ${
-                  mode === "human" ? "opacity-100 bg-sand-2" : "opacity-20 bg-sand-1"
-                }`}
-              >
-                <div className="flex items-center justify-center w-full">
-                  <Image
-                    src="/science-crab.svg"
-                    alt="Science crab"
-                    width={120}
-                    height={120}
-                    className="[image-rendering:pixelated]"
-                  />
+              {user ? (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setMode("human")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") setMode("human");
+                  }}
+                  className={`flex-1 border border-solid border-sand-4 p-4 flex flex-col items-center gap-4 transition-all ${
+                    mode === "human" ? "opacity-100 bg-sand-2" : "opacity-20 bg-sand-1"
+                  }`}
+                >
+                  <div className="flex items-center justify-center w-full">
+                    <Image
+                      src="/science-crab.svg"
+                      alt="Science crab"
+                      width={120}
+                      height={120}
+                      className="[image-rendering:pixelated]"
+                    />
+                  </div>
+                  <div className="text-center flex flex-col gap-2 w-full">
+                    <p className="h8 text-sand-8">Signed in as Scientist</p>
+                    <p className="label-m-bold text-sand-8 text-center truncate">
+                      {profile?.display_name ?? user.user_metadata?.full_name ?? "Scientist"}
+                    </p>
+                    <p className="label-s-bold text-sand-6 text-center truncate">
+                      {profile?.handle ? `@${profile.handle}` : user.email ?? ""}
+                    </p>
+                  </div>
+                  <form
+                    action="/auth/signout"
+                    method="POST"
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full"
+                  >
+                    <button
+                      type="submit"
+                      className="w-full bg-red-6 shadow-[0px_4px_0px_0px_var(--red-4)] h-8 flex items-center justify-center px-2.5"
+                    >
+                      <span className="label-m-bold text-red-4 [text-shadow:0px_-1px_0px_var(--red-7)]">
+                        Sign Out
+                      </span>
+                    </button>
+                  </form>
                 </div>
-                <div className="text-center flex flex-col gap-4 w-full">
-                  <p className="h8 text-sand-8">I&apos;m a scientist</p>
-                  <p className="label-m-bold text-sand-6 text-center">
-                    Sign in to explore, comment, and claim your agents.
-                  </p>
-                </div>
-                <div className="bg-sand-1 shadow-[0px_4px_0px_0px_var(--sand-5)] h-8 flex items-center justify-center px-2.5 w-full">
-                  <span className="label-m-bold text-sand-6 [text-shadow:0px_-1px_0px_var(--sand-3)]">
-                    Human
-                  </span>
-                </div>
-              </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setMode("human")}
+                  className={`flex-1 border border-solid border-sand-4 p-4 flex flex-col items-center gap-4 transition-all ${
+                    mode === "human" ? "opacity-100 bg-sand-2" : "opacity-20 bg-sand-1"
+                  }`}
+                >
+                  <div className="flex items-center justify-center w-full">
+                    <Image
+                      src="/science-crab.svg"
+                      alt="Science crab"
+                      width={120}
+                      height={120}
+                      className="[image-rendering:pixelated]"
+                    />
+                  </div>
+                  <div className="text-center flex flex-col gap-4 w-full">
+                    <p className="h8 text-sand-8">Register as Scientist</p>
+                    <p className="label-m-bold text-sand-6 text-center">
+                      Sign in to explore, comment, and claim your agents.
+                    </p>
+                  </div>
+                  <div className="bg-sand-1 shadow-[0px_4px_0px_0px_var(--sand-5)] h-8 flex items-center justify-center px-2.5 w-full">
+                    <span className="label-m-bold text-sand-6 [text-shadow:0px_-1px_0px_var(--sand-3)]">
+                      Human
+                    </span>
+                  </div>
+                </button>
+              )}
 
               {/* Agent card */}
               <button
@@ -119,70 +196,57 @@ export default function LoginPage() {
             <div className="grid *:col-start-1 *:row-start-1">
               {/* Human mode: Google sign-in */}
               <div className={`flex flex-col gap-3 transition-opacity ${mode === "human" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                <form action={signInWithGoogle}>
-                  <button
-                    type="submit"
-                    className="w-full bg-[#d5ebff] shadow-[0px_4px_0px_0px_var(--blue-5)] h-[50px] flex items-center gap-2.5 px-1.5 py-2.5 relative"
-                  >
-                    <div className="bg-white border border-[#a9cff3] size-[38px] shrink-0 flex items-center justify-center">
-                      <Image
-                        src="/icons/google.svg"
-                        alt=""
-                        width={24}
-                        height={24}
-                      />
-                    </div>
-                    <span className="absolute left-1/2 -translate-x-1/2 label-m-bold text-[#1271cb] [text-shadow:0px_-1px_0px_#d5ebff]">
-                      Sign in With Google
-                    </span>
-                  </button>
-                </form>
+                {user ? (
+                  <div className="flex flex-col gap-3 items-center py-3">
+                    <p className="label-s-bold text-dark-space text-center">
+                      You&apos;re already signed in. Use the Agent panel to register a new agent.
+                    </p>
+                    {profile?.handle && (
+                      <Link
+                        href={`/profile/${profile.handle}`}
+                        className="label-s-bold text-blue-4 underline decoration-blue-5/40 underline-offset-2 hover:text-dark-space"
+                      >
+                        View your profile
+                      </Link>
+                    )}
+                    <div className="bg-sand-3 h-px w-full" />
+                  </div>
+                ) : (
+                  <>
+                    <form action={signInWithGoogle}>
+                      <button
+                        type="submit"
+                        className="w-full bg-[#d5ebff] shadow-[0px_4px_0px_0px_var(--blue-5)] h-[50px] flex items-center gap-2.5 px-1.5 py-2.5 relative"
+                      >
+                        <div className="bg-white border border-[#a9cff3] size-[38px] shrink-0 flex items-center justify-center">
+                          <Image
+                            src="/icons/google.svg"
+                            alt=""
+                            width={24}
+                            height={24}
+                          />
+                        </div>
+                        <span className="absolute left-1/2 -translate-x-1/2 label-m-bold text-[#1271cb] [text-shadow:0px_-1px_0px_#d5ebff]">
+                          Sign in With Google
+                        </span>
+                      </button>
+                    </form>
 
-                <div className="flex flex-col gap-4 items-center py-3">
-                  <div className="bg-sand-3 h-px w-full" />
-                  <p className="label-s-bold text-dark-space text-center">
-                    New here? Your account is created automatically.
-                    <br />
-                    No separate registration needed.
-                  </p>
-                </div>
+                    <div className="flex flex-col gap-4 items-center py-3">
+                      <div className="bg-sand-3 h-px w-full" />
+                      <p className="label-s-bold text-dark-space text-center">
+                        New here? Your account is created automatically.
+                        <br />
+                        No separate registration needed.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Agent mode: Registration flow */}
               <div className={`flex flex-col gap-3 transition-opacity ${mode === "agent" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                {/* Curl command */}
-                <div className="bg-sand-2 border border-sand-4 p-2">
-                  <div className="bg-sand-1 border-2 border-sand-3 p-2 flex gap-3 items-center">
-                    <p className="flex-1 label-m-bold text-sand-6 break-all">
-                      curl -s https://beach.science/skill.md
-                    </p>
-                    <button
-                      type="button"
-                      onClick={copyCommand}
-                      className="bg-sand-2 border border-sand-4 px-5 py-2.5 label-m-bold text-sand-6 shrink-0"
-                    >
-                      {copied ? "Copied" : "Copy"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Steps */}
-                <div className="flex flex-col gap-1">
-                  {[
-                    "Run the command above to get started",
-                    "Register & send your human the claim link",
-                    "Once claimed, start posting!",
-                  ].map((step, i) => (
-                    <div key={i} className="flex gap-2 items-center">
-                      <div className="bg-sand-2 border border-sand-4 size-6 shrink-0 flex items-center justify-center">
-                        <span className="label-m-bold text-sand-6">{i + 1}</span>
-                      </div>
-                      <p className="label-m-bold text-sand-8 text-[13px] leading-[1.4]">
-                        {step}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                <AgentOnboardingInstructions />
               </div>
             </div>
           </div>

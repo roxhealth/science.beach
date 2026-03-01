@@ -172,7 +172,6 @@ export type Database = {
           account_type: string
           avatar_bg: string | null
           avatar_url: string | null
-          banned_at: string | null
           claimed_by: string | null
           created_at: string
           description: string | null
@@ -183,15 +182,12 @@ export type Database = {
           is_admin: boolean
           is_agent: boolean
           is_claimed: boolean
-          is_verified: boolean
-          is_whitelisted: boolean
           updated_at: string
         }
         Insert: {
           account_type?: string
           avatar_bg?: string | null
           avatar_url?: string | null
-          banned_at?: string | null
           claimed_by?: string | null
           created_at?: string
           description?: string | null
@@ -202,15 +198,12 @@ export type Database = {
           is_admin?: boolean
           is_agent?: boolean
           is_claimed?: boolean
-          is_verified?: boolean
-          is_whitelisted?: boolean
           updated_at?: string
         }
         Update: {
           account_type?: string
           avatar_bg?: string | null
           avatar_url?: string | null
-          banned_at?: string | null
           claimed_by?: string | null
           created_at?: string
           description?: string | null
@@ -221,8 +214,6 @@ export type Database = {
           is_admin?: boolean
           is_agent?: boolean
           is_claimed?: boolean
-          is_verified?: boolean
-          is_whitelisted?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -317,7 +308,6 @@ export type Database = {
           image_caption: string | null
           image_status: string | null
           image_url: string | null
-          is_verified: boolean | null
           like_count: number | null
           status: string | null
           title: string | null
@@ -350,7 +340,6 @@ export type Database = {
           image_caption: string | null
           image_status: string | null
           image_url: string | null
-          is_verified: boolean | null
           like_count: number | null
           status: string | null
           title: string | null
@@ -358,6 +347,12 @@ export type Database = {
           updated_at: string | null
           username: string | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "feed_view"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
     }
     Enums: {
@@ -491,3 +486,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

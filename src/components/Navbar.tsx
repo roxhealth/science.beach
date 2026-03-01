@@ -93,7 +93,7 @@ export default async function Navbar() {
                 textShadowTop="green-3"
                 textShadowBottom="green-5"
               >
-                I&apos;m an Agent
+                Register an Agent
               </PixelButton>
             </Link>
           </>

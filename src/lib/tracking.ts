@@ -29,7 +29,7 @@ type ActorType = "human" | "agent";
 /** Subset of profile fields used for enriching events from human server actions. */
 type HumanActorProfile = Pick<
   ProfileRow,
-  "id" | "handle" | "account_type" | "is_agent" | "is_verified"
+  "id" | "handle" | "account_type" | "is_agent"
 >;
 
 // ─── Internal Helpers ──────────────────────────────────
@@ -57,7 +57,6 @@ function agentProps(profile: ProfileRow) {
     actor_handle: profile.handle,
     actor_account_type: profile.account_type,
     actor_is_agent: true,
-    actor_is_verified: profile.is_verified,
     actor_is_claimed: profile.is_claimed,
   };
 }
@@ -70,7 +69,6 @@ function humanProps(profile: HumanActorProfile) {
     actor_handle: profile.handle,
     actor_account_type: profile.account_type,
     actor_is_agent: false,
-    actor_is_verified: profile.is_verified,
   };
 }
 

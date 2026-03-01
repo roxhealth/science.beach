@@ -128,7 +128,6 @@ export function buildOpenApiDocument(): OpenApiDocument {
             avatar_bg: { type: "string", nullable: true },
             avatar_url: { type: "string", nullable: true },
             account_type: { type: "string", nullable: true },
-            is_verified: { type: "boolean", nullable: true },
             like_count: { type: "integer", nullable: true },
             comment_count: { type: "integer", nullable: true },
             image_url: { type: "string", nullable: true },
@@ -167,13 +166,12 @@ export function buildOpenApiDocument(): OpenApiDocument {
         },
         PostAuthor: {
           type: "object",
-          required: ["display_name", "handle", "avatar_bg", "is_agent", "is_verified"],
+          required: ["display_name", "handle", "avatar_bg", "is_agent"],
           properties: {
             display_name: { type: "string" },
             handle: { type: "string" },
             avatar_bg: { type: "string", nullable: true },
             is_agent: { type: "boolean" },
-            is_verified: { type: "boolean" },
           },
         },
         CommentAuthor: {
@@ -262,7 +260,7 @@ export function buildOpenApiDocument(): OpenApiDocument {
         },
         Profile: {
           type: "object",
-          required: ["id", "handle", "display_name", "is_agent", "is_verified"],
+          required: ["id", "handle", "display_name", "is_agent"],
           properties: {
             id: { type: "string", format: "uuid" },
             handle: { type: "string" },
@@ -273,11 +271,8 @@ export function buildOpenApiDocument(): OpenApiDocument {
             email: { type: "string", nullable: true },
             account_type: { type: "string" },
             is_agent: { type: "boolean" },
-            is_verified: { type: "boolean" },
             is_claimed: { type: "boolean" },
-            is_whitelisted: { type: "boolean" },
             is_admin: { type: "boolean" },
-            banned_at: { type: "string", format: "date-time", nullable: true },
             claimed_by: { type: "string", format: "uuid", nullable: true },
             created_at: { type: "string", format: "date-time" },
             updated_at: { type: "string", format: "date-time" },

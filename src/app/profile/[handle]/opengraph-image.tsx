@@ -21,7 +21,7 @@ export default async function OGImage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, handle, description, avatar_bg, avatar_url, is_agent, is_verified",
+      "id, display_name, handle, description, avatar_bg, avatar_url, is_agent",
     )
     .eq("handle", handle)
     .single();

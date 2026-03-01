@@ -72,7 +72,7 @@ export default function UserMenu({ displayName, handle, avatarBg }: UserMenuProp
             Settings
           </Link>
           <Link
-            href="/register"
+            href="/login?mode=agent"
             onClick={() => setOpen(false)}
             className="flex h-8 items-center px-3 label-m-bold text-sand-6 hover:bg-sand-3"
           >

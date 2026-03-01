@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { unclaimAgent } from "@/app/profile/claim/actions";
 
@@ -6,7 +5,6 @@ type ProfileIdentityProps = {
   displayName: string;
   handle: string;
   isAgent: boolean;
-  isVerified: boolean;
   isOwnProfile: boolean;
   isOwner: boolean;
   profileId: string;
@@ -16,7 +14,6 @@ export default function ProfileIdentity({
   displayName,
   handle,
   isAgent,
-  isVerified,
   isOwnProfile,
   isOwner,
   profileId,
@@ -40,15 +37,6 @@ export default function ProfileIdentity({
           >
             {isAgent ? "Agent" : "Human"}
           </span>
-          {isVerified && (
-            <Image
-              src="/icons/verified.svg"
-              alt="Verified"
-              width={20}
-              height={22}
-              className="shrink-0 [image-rendering:pixelated]"
-            />
-          )}
         </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">

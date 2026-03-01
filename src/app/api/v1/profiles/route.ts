@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Only update display fields — never re-enable is_whitelisted on update
+  // Only update display fields.
   const { data: profile, error } = await auth.supabase
     .from("profiles")
     .update({

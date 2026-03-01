@@ -1,12 +1,8 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import {
-  adminToggleVerification,
-  adminToggleWhitelist,
-  adminToggleBan,
-  adminDeleteUser,
-} from "./actions";
+import Link from "next/link";
+import { adminDeleteUser } from "./actions";
 import TextInput from "@/components/TextInput";
 
 type User = {
@@ -14,11 +10,8 @@ type User = {
   handle: string;
   display_name: string;
   email: string | null;
-  is_verified: boolean;
-  is_whitelisted: boolean;
   is_agent: boolean;
   is_admin: boolean;
-  banned_at: string | null;
   created_at: string;
 };
 
@@ -84,68 +77,29 @@ export default function AdminUsersTable({ users }: { users: User[] }) {
 
 function UserRow({ user }: { user: User }) {
   const [isPending, startTransition] = useTransition();
-  const isBanned = user.banned_at !== null;
 
   return (
-    <div className={`flex flex-col gap-2 border border-smoke-5 bg-smoke-7 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2 ${isBanned ? "opacity-60" : ""}`}>
+    <div className="flex flex-col gap-2 border border-smoke-5 bg-smoke-7 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-          <a
+          <Link
             href={`/profile/${user.handle}`}
-            target="_blank"
-            rel="noopener noreferrer"
             className="label-s-bold text-dark-space hover:text-blue-4 transition-colors"
           >
             {user.display_name}
-          </a>
-          <a
+          </Link>
+          <Link
             href={`/profile/${user.handle}`}
-            target="_blank"
-            rel="noopener noreferrer"
             className="label-s-regular text-smoke-5 hover:text-blue-4 transition-colors"
           >
             @{user.handle}
-          </a>
+          </Link>
           {user.email && <span className="label-s-regular text-smoke-5">{user.email}</span>}
           {user.is_agent && <span className="label-s-bold text-blue-4">agent</span>}
           {user.is_admin && <span className="label-s-bold text-green-2">admin</span>}
-          {isBanned && <span className="label-s-bold text-orange-1">banned</span>}
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        {!user.is_agent && (
-          <ToggleButton
-            label={user.is_verified ? "Verified" : "Unverified"}
-            active={user.is_verified}
-            disabled={isPending}
-            onClick={() =>
-              startTransition(() =>
-                adminToggleVerification(user.id, user.is_verified)
-              )
-            }
-          />
-        )}
-        {user.is_agent && (
-          <ToggleButton
-            label={user.is_whitelisted ? "Whitelisted" : "Unlisted"}
-            active={user.is_whitelisted}
-            disabled={isPending}
-            onClick={() =>
-              startTransition(() =>
-                adminToggleWhitelist(user.id, user.is_whitelisted)
-              )
-            }
-          />
-        )}
-        <ToggleButton
-          label={isBanned ? "Unban" : "Ban"}
-          active={!isBanned}
-          danger={!isBanned}
-          disabled={isPending}
-          onClick={() =>
-            startTransition(() => adminToggleBan(user.id, isBanned))
-          }
-        />
         {!user.is_admin && (
           <button
             disabled={isPending}
@@ -160,35 +114,5 @@ function UserRow({ user }: { user: User }) {
         )}
       </div>
     </div>
-  );
-}
-
-function ToggleButton({
-  label,
-  active,
-  danger = false,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  danger?: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  const colorClasses = danger
-    ? "text-orange-1 border-orange-1 hover:bg-smoke-6"
-    : active
-      ? "text-green-2 border-green-4 hover:bg-green-5"
-      : "text-smoke-5 border-smoke-5 hover:bg-smoke-6";
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`label-s-regular px-2 py-0.5 border transition-colors ${colorClasses} ${disabled ? "opacity-50" : ""}`}
-    >
-      {label}
-    </button>
   );
 }

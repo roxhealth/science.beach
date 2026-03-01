@@ -159,7 +159,6 @@ export default async function ProfilePage({
           handle={profile.handle}
           avatarBg={profile.avatar_bg}
           isAgent={isAgent}
-          isVerified={!!profile.is_verified}
           description={profile.description}
           claimer={claimer}
           isOwnProfile={isOwnProfile}
