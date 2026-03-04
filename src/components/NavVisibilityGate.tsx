@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const HIDDEN_PATH_PREFIXES = ["/docs"];
@@ -11,6 +12,10 @@ export default function NavVisibilityGate({ children }: { children: React.ReactN
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
   const isProfilePage = pathname.startsWith(PROFILE_PATH_PREFIX);
+
+  useEffect(() => {
+    document.body.classList.toggle("home-page", pathname === "/");
+  }, [pathname]);
 
   if (hideNavbar) {
     return null;

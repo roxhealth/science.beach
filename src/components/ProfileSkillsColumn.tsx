@@ -10,6 +10,7 @@ type ProfileSkillsColumnProps = {
   skills: RegistrySkill[];
   registryVersion: string;
   registryUpdated: string;
+  verifiedSlugs?: string[];
 };
 
 export default function ProfileSkillsColumn({
@@ -17,7 +18,9 @@ export default function ProfileSkillsColumn({
   skills,
   registryVersion,
   registryUpdated,
+  verifiedSlugs = [],
 }: ProfileSkillsColumnProps) {
+  const verifiedSet = new Set(verifiedSlugs);
   const active = skills.filter((s) => activeSkillSlugs.includes(s.slug));
   const available = skills.filter((s) => !activeSkillSlugs.includes(s.slug));
 
@@ -36,7 +39,7 @@ export default function ProfileSkillsColumn({
           <div className="mt-2 flex flex-col gap-2">
             {active.length > 0 ? (
               active.map((skill) => (
-                <SkillCard key={skill.slug} skill={skill} state="active" />
+                <SkillCard key={skill.slug} skill={skill} state="active" verified={verifiedSet.has(skill.slug)} />
               ))
             ) : (
               <p className="label-s-regular text-sand-6">
@@ -50,7 +53,7 @@ export default function ProfileSkillsColumn({
           <p className="label-s-bold text-sand-8">Available Skills</p>
           <div className="mt-2 flex flex-col gap-2">
             {available.map((skill) => (
-              <SkillCard key={skill.slug} skill={skill} state="available" />
+              <SkillCard key={skill.slug} skill={skill} state="available" verified={verifiedSet.has(skill.slug)} />
             ))}
           </div>
         </div>
@@ -72,28 +75,38 @@ const CATEGORY_STYLES: Record<string, string> = {
 function SkillCard({
   skill,
   state,
+  verified,
 }: {
   skill: RegistrySkill;
   state: "active" | "available";
+  verified?: boolean;
 }) {
   const fileCount = Object.keys(skill.files).length;
 
   return (
-    <article className="border border-sand-4 bg-sand-2 p-2.5">
+    <article className="border border-sand-4 bg-sand-1 p-2.5">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="text-[14px] leading-none">{skill.emoji}</span>
           <p className="label-s-bold text-sand-8">{skill.slug}</p>
         </div>
-        <span
-          className={`shrink-0 border px-1.5 py-0.5 text-[11px] font-bold leading-none ${
-            state === "active"
-              ? "border-green-4 bg-green-5 text-green-2"
-              : "border-blue-4 bg-blue-5 text-blue-2"
-          }`}
-        >
-          {state === "active" ? "Active" : "Available"}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {verified && (
+            <span className="inline-flex shrink-0 items-center gap-1 border border-green-4 bg-green-5 px-1.5 py-0.5 text-[11px] font-bold leading-none text-green-2">
+              <Image src="/icons/verified.svg" alt="" width={10} height={10} unoptimized />
+              Verified
+            </span>
+          )}
+          <span
+            className={`shrink-0 border px-1.5 py-0.5 text-[11px] font-bold leading-none ${
+              state === "active"
+                ? "border-green-4 bg-green-5 text-green-2"
+                : "border-blue-4 bg-blue-5 text-blue-2"
+            }`}
+          >
+            {state === "active" ? "Active" : "Available"}
+          </span>
+        </div>
       </div>
 
       <p className="mt-1 label-s-regular text-sand-6">{skill.description}</p>

@@ -5,8 +5,13 @@ import type { ProfileHypothesis } from "@/components/ProfileMiddleColumnPanel";
 import ProfileSubMetricsPanel from "@/components/ProfileSubMetricsPanel";
 import ProfileSkillsColumn from "@/components/ProfileSkillsColumn";
 import type { RegistrySkill } from "@/components/ProfileSkillsColumn";
-import { listRegistrySkills, readSkillsRegistry } from "@/lib/skills-registry";
+import {
+  listRegistrySkills,
+  readSkillsRegistry,
+  computeSkillHashes,
+} from "@/lib/skills-registry";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 async function loadSkillsRegistry(): Promise<{
   skills: RegistrySkill[];
@@ -133,9 +138,29 @@ export default async function ProfilePage({
 
   const isOwnProfile = user?.id === profile.id;
   const isOwner = Boolean(user?.id && user.id === profile.claimed_by);
-  const { skills, registryVersion, registryUpdated } =
-    await loadSkillsRegistry();
-  const activeSkillSlugs = profile.is_agent ? ["beach-science"] : [];
+  const [{ skills, registryVersion, registryUpdated }, serverHashes, { data: verificationRows }] =
+    await Promise.all([
+      loadSkillsRegistry(),
+      computeSkillHashes(),
+      createAdminClient()
+        .from("skill_verifications")
+        .select("skill_slug, skill_version, combined_hash, verified_at")
+        .eq("profile_id", profile.id),
+    ]);
+
+  // Build a set of verified skill slugs (where the stored hash still matches current server hash)
+  const verifiedSlugs = new Set<string>();
+  for (const row of verificationRows ?? []) {
+    const current = serverHashes[row.skill_slug];
+    if (current && current.combined_hash === row.combined_hash) {
+      verifiedSlugs.add(row.skill_slug);
+    }
+  }
+
+  // Verified skills are active — merge with any base active skills
+  const activeSkillSlugs = profile.is_agent
+    ? Array.from(new Set(["beach-science", ...verifiedSlugs]))
+    : [];
 
   return (
     <main className="w-full bg-sand-3 px-2 pt-0 pb-6">
@@ -168,7 +193,6 @@ export default async function ProfilePage({
                 />
 
                 <ProfileSubMetricsPanel />
-                <ProfileSubMetricsPanel />
               </div>
 
               <div className="flex h-full min-w-0 flex-col gap-2">
@@ -182,6 +206,7 @@ export default async function ProfilePage({
             skills={skills}
             registryVersion={registryVersion}
             registryUpdated={registryUpdated}
+            verifiedSlugs={Array.from(verifiedSlugs)}
           />
         </div>
       </div>
