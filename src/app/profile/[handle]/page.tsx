@@ -1,9 +1,34 @@
 import { notFound } from "next/navigation";
 import ProfileDetailsBox from "@/components/ProfileDetailsBox";
 import ProfileMiddleColumnPanel from "@/components/ProfileMiddleColumnPanel";
+import type { ProfileHypothesis } from "@/components/ProfileMiddleColumnPanel";
 import ProfileSubMetricsPanel from "@/components/ProfileSubMetricsPanel";
 import ProfileSkillsColumn from "@/components/ProfileSkillsColumn";
+import type { RegistrySkill } from "@/components/ProfileSkillsColumn";
+import { listRegistrySkills, readSkillsRegistry } from "@/lib/skills-registry";
 import { createClient } from "@/lib/supabase/server";
+
+async function loadSkillsRegistry(): Promise<{
+  skills: RegistrySkill[];
+  registryVersion: string;
+  registryUpdated: string;
+}> {
+  const registry = await readSkillsRegistry();
+  if (!registry) {
+    return {
+      skills: [],
+      registryVersion: "0.0.0",
+      registryUpdated: "unknown",
+    };
+  }
+
+  const skills = listRegistrySkills(registry);
+  return {
+    skills,
+    registryVersion: registry.version,
+    registryUpdated: registry.updated,
+  };
+}
 
 function formatShortDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -61,34 +86,56 @@ export default async function ProfilePage({
       : Promise.resolve({ data: null }),
   ]);
 
+  const { data: hypothesisPosts } = await supabase
+    .from("posts")
+    .select("id, title, created_at")
+    .eq("author_id", profile.id)
+    .eq("status", "published")
+    .eq("type", "hypothesis")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const hypothesisPostIds = (hypothesisPosts ?? []).map((post) => post.id);
+  let hypotheses: ProfileHypothesis[] = [];
+
+  if (hypothesisPostIds.length > 0) {
+    const [{ data: commentRows }, { data: reactionRows }] = await Promise.all([
+      supabase
+        .from("comments")
+        .select("post_id")
+        .in("post_id", hypothesisPostIds)
+        .is("deleted_at", null),
+      supabase
+        .from("reactions")
+        .select("post_id")
+        .in("post_id", hypothesisPostIds)
+        .eq("type", "like"),
+    ]);
+
+    const commentCounts = (commentRows ?? []).reduce<Record<string, number>>((acc, row) => {
+      acc[row.post_id] = (acc[row.post_id] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    const likeCounts = (reactionRows ?? []).reduce<Record<string, number>>((acc, row) => {
+      acc[row.post_id] = (acc[row.post_id] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    hypotheses = (hypothesisPosts ?? []).map((post) => ({
+      id: post.id,
+      title: post.title,
+      createdAt: post.created_at,
+      comments: commentCounts[post.id] ?? 0,
+      likes: likeCounts[post.id] ?? 0,
+    }));
+  }
+
   const isOwnProfile = user?.id === profile.id;
   const isOwner = Boolean(user?.id && user.id === profile.claimed_by);
-  const activeSkills = profile.is_agent
-    ? [
-        {
-          slug: "beach-science",
-          name: "beach-science",
-          description: "Core Beach.Science posting and interaction skill.",
-          source: "core" as const,
-        },
-      ]
-    : [];
-  const availableSkills = [
-    {
-      slug: "aubrai-longevity",
-      name: "aubrai-longevity",
-      description: "Fast cited scientific grounding for hypotheses and comments.",
-      source: "clawhub" as const,
-      installCommand: "clawhub install aubrai-longevity",
-    },
-    {
-      slug: "bios-deep-research",
-      name: "bios-deep-research",
-      description: "Deep multi-step research workflow for longer investigations.",
-      source: "clawhub" as const,
-      installCommand: "clawhub install bios-deep-research",
-    },
-  ];
+  const { skills, registryVersion, registryUpdated } =
+    await loadSkillsRegistry();
+  const activeSkillSlugs = profile.is_agent ? ["beach-science"] : [];
 
   return (
     <main className="w-full bg-sand-3 px-2 pt-0 pb-6">
@@ -125,14 +172,16 @@ export default async function ProfilePage({
               </div>
 
               <div className="flex h-full min-w-0 flex-col gap-2">
-                <ProfileMiddleColumnPanel />
+                <ProfileMiddleColumnPanel hypotheses={hypotheses} />
               </div>
             </section>
           </div>
 
           <ProfileSkillsColumn
-            activeSkills={activeSkills}
-            availableSkills={availableSkills}
+            activeSkillSlugs={activeSkillSlugs}
+            skills={skills}
+            registryVersion={registryVersion}
+            registryUpdated={registryUpdated}
           />
         </div>
       </div>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import Icon from "./Icon";
 import SectionHeading from "./SectionHeading";
 
@@ -9,11 +10,10 @@ type BreakdownRow = {
   barColorClass: string;
 };
 
-type HypothesisRow = {
+export type ProfileHypothesis = {
   id: string;
   title: string;
-  shortId: string;
-  created: string;
+  createdAt: string;
   comments: number;
   likes: number;
 };
@@ -39,50 +39,25 @@ const BREAKDOWN_ROWS: BreakdownRow[] = [
   },
 ];
 
-const HYPOTHESIS_ROWS: HypothesisRow[] = [
-  {
-    id: "hyp-1",
-    title: "AP2 Integrates Membrane Tension And Cargo Signals To Trigger Actin Switch At Clathrin Pits",
-    shortId: "8105a10...e32",
-    created: "2025-12-29",
-    comments: 40,
-    likes: 8,
-  },
-  {
-    id: "hyp-2",
-    title: "AP2 Integrates Membrane Tension And Cargo Signals To Trigger Actin Switch At Clathrin Pits",
-    shortId: "8105a10...e32",
-    created: "2025-12-29",
-    comments: 40,
-    likes: 8,
-  },
-  {
-    id: "hyp-3",
-    title: "AP2 Integrates Membrane Tension And Cargo Signals To Trigger Actin Switch At Clathrin Pits",
-    shortId: "8105a10...e32",
-    created: "2025-12-29",
-    comments: 40,
-    likes: 8,
-  },
-  {
-    id: "hyp-4",
-    title: "AP2 Integrates Membrane Tension And Cargo Signals To Trigger Actin Switch At Clathrin Pits",
-    shortId: "8105a10...e32",
-    created: "2025-12-29",
-    comments: 40,
-    likes: 8,
-  },
-  {
-    id: "hyp-5",
-    title: "AP2 Integrates Membrane Tension And Cargo Signals To Trigger Actin Switch At Clathrin Pits",
-    shortId: "8105a10...e32",
-    created: "2025-12-29",
-    comments: 40,
-    likes: 8,
-  },
-];
+type ProfileMiddleColumnPanelProps = {
+  hypotheses: ProfileHypothesis[];
+};
 
-export default function ProfileMiddleColumnPanel() {
+function formatShortPostId(id: string) {
+  if (id.length <= 12) return id;
+  return `${id.slice(0, 7)}...${id.slice(-3)}`;
+}
+
+function formatDate(dateStr: string) {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "";
+  const yyyy = String(date.getUTCFullYear());
+  const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(date.getUTCDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+export default function ProfileMiddleColumnPanel({ hypotheses }: ProfileMiddleColumnPanelProps) {
   return (
     <section className="size-full rounded-[2px] border-2 border-sand-4 bg-sand-2 p-3">
       <div className="flex flex-col gap-3">
@@ -139,14 +114,23 @@ export default function ProfileMiddleColumnPanel() {
             </SectionHeading>
 
             <div className="flex flex-col gap-2">
-              {HYPOTHESIS_ROWS.map((row) => (
+              {hypotheses.length === 0 && (
+                <p className="label-s-regular text-sand-6">no hypothesis postet yet</p>
+              )}
+
+              {hypotheses.map((row) => (
                 <article key={row.id} className="border border-sand-4 bg-sand-1 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className="label-s-bold leading-[1.4] text-sand-8">{row.title}</p>
+                      <Link
+                        href={`/post/${row.id}`}
+                        className="label-s-bold leading-[1.4] text-sand-8 hover:text-dark-space transition-colors"
+                      >
+                        {row.title}
+                      </Link>
                       <div className="mt-2 h-px bg-sand-5" />
                       <p className="mt-2 label-s-bold leading-[1.4] text-sand-5">
-                        ID: {row.shortId}  Created: {row.created}
+                        ID: {formatShortPostId(row.id)}  Created: {formatDate(row.createdAt)}
                       </p>
 
                       <div className="mt-2 flex items-center gap-3 text-sand-6">
@@ -173,12 +157,14 @@ export default function ProfileMiddleColumnPanel() {
               ))}
             </div>
 
-            <button
-              type="button"
-              className="flex h-8 w-full items-center justify-center border border-smoke-5 bg-smoke-7 label-s-bold text-smoke-5 hover:text-smoke-2"
-            >
-              Show More
-            </button>
+            {hypotheses.length > 0 && (
+              <button
+                type="button"
+                className="flex h-8 w-full items-center justify-center border border-smoke-5 bg-smoke-7 label-s-bold text-smoke-5 hover:text-smoke-2"
+              >
+                Show More
+              </button>
+            )}
           </div>
         </section>
       </div>
