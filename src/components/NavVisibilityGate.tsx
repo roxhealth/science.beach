@@ -4,14 +4,14 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const HIDDEN_PATH_PREFIXES = ["/docs"];
-const PROFILE_PATH_PREFIX = "/profile/";
+const FULL_WIDTH_PREFIXES = ["/profile/"];
 
 export default function NavVisibilityGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const hideNavbar = HIDDEN_PATH_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
-  const isProfilePage = pathname.startsWith(PROFILE_PATH_PREFIX);
+  const isFullWidth = FULL_WIDTH_PREFIXES.some((p) => pathname.startsWith(p));
 
   useEffect(() => {
     document.body.classList.toggle("home-page", pathname === "/");
@@ -21,5 +21,5 @@ export default function NavVisibilityGate({ children }: { children: React.ReactN
     return null;
   }
 
-  return <div className={isProfilePage ? "profile-nav" : undefined}>{children}</div>;
+  return <div data-nav-width={isFullWidth ? "full" : undefined}>{children}</div>;
 }

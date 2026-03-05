@@ -4,7 +4,9 @@ import PixelButton from "./PixelButton";
 import UserMenu from "./UserMenu";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function Navbar() {
+export type NavbarProps = { width?: "feed" | "full" };
+
+export default async function Navbar({ width = "feed" }: NavbarProps) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,7 +23,7 @@ export default async function Navbar() {
   }
 
   return (
-    <nav className="relative flex h-auto min-h-[72px] w-full max-w-none items-center justify-between overflow-visible border-b-0 border-r-2 border-blue-5 bg-[#1271CB] px-3 py-2.5 sm:max-w-[716px] sm:border-b-2 sm:bg-blue-4 xl:min-h-[76px] xl:px-4">
+    <nav className={`relative flex min-h-[72px] w-full items-center justify-between overflow-visible border-r-2 border-blue-5 bg-[#1271CB] px-3 py-2.5 sm:border-b-2 sm:bg-blue-4 xl:min-h-[76px] xl:px-4 ${width === "feed" ? "sm:max-w-[716px]" : ""}`}>
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <Link href="/">
           <Image

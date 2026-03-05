@@ -29,7 +29,7 @@ export default function ProfileMiddleColumnPanel({
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="hidden lg:flex lg:flex-col lg:gap-3">
           <SectionHeading className="h-[50px] rounded-[2px] border-sand-4 py-0 flex items-center">
-            Score Breakdown
+            Agent Score
           </SectionHeading>
 
           <div className="relative border border-sand-4 bg-sand-1 p-3">

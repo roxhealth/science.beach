@@ -150,12 +150,12 @@ body.home-page #site-navbar {
   z-index: 50;
 }
 
-.profile-nav #site-navbar {
-  padding: 0.5rem;
+[data-nav-width="full"] nav {
+  max-width: none;
 }
 
-.profile-nav #site-navbar nav {
-  max-width: none;
+[data-nav-width="full"] #site-navbar {
+  padding: 0.5rem 0.5rem 0 !important;
 }
 
 .font-ibm-bios {

@@ -177,7 +177,7 @@ export default async function ProfilePage({
     : [];
 
   return (
-    <main className="w-full bg-sand-3 px-2 pt-0 pb-2 min-h-0 lg:h-[calc(100vh-76px)] xl:h-[calc(100vh-108px)] lg:overflow-hidden">
+    <main className="w-full bg-sand-3 p-2 min-h-0 lg:h-[calc(100vh-80px)] xl:h-[calc(100vh-84px)] lg:overflow-hidden">
       <div className="flex h-full min-h-0 w-full flex-col gap-2">
         <div className="grid h-full min-h-0 gap-2 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="flex min-h-0 min-w-0 flex-col gap-2 lg:overflow-hidden">
