@@ -47,34 +47,84 @@ function buildTree(comments: CommentWithProfile[]): TreeNode[] {
   return roots;
 }
 
+function countDescendants(node: TreeNode): number {
+  let count = node.children.length;
+  for (const child of node.children) count += countDescendants(child);
+  return count;
+}
+
 function CommentNode({
-  node, postId, currentUserId, depth, isAdmin,
+  node, postId, currentUserId, depth, isAdmin, defaultCollapsed,
 }: {
-  node: TreeNode; postId: string; currentUserId: string | null; depth: number; isAdmin?: boolean;
+  node: TreeNode; postId: string; currentUserId: string | null; depth: number; isAdmin?: boolean; defaultCollapsed?: boolean;
 }) {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed ?? true);
   const canDelete = currentUserId === node.author_id || isAdmin;
+  const replyCount = countDescendants(node);
 
   return (
     <div className={depth > 0 ? "ml-2 border-l border-smoke-5 pl-2 sm:ml-4 sm:pl-3" : ""}>
-      <div className="flex flex-col gap-1.5 py-2">
-        <div className="flex items-center gap-2">
-          <AvatarClient bg={node.profiles.avatar_bg} size="sm" />
-          <span className="label-s-bold text-dark-space">{node.profiles.display_name}</span>
-          <span className="label-s-regular text-smoke-5">{formatRelativeTime(node.created_at)}</span>
-        </div>
-        <div className="paragraph-s text-smoke-2">
-          <Markdown>{node.body}</Markdown>
-        </div>
-        <div className="flex items-center gap-3">
-          {currentUserId && <ReplyForm postId={postId} parentId={node.id} />}
-          {canDelete && (
-            <button onClick={() => deleteComment(node.id, postId)} className="label-s-regular text-smoke-5 hover:text-orange-1 transition-colors">
-              delete
+      <div className="flex gap-2 py-2">
+        {/* Collapse toggle line */}
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer"
+          aria-label={collapsed ? "Expand comment" : "Collapse comment"}
+        >
+          <AvatarClient bg={node.profiles.avatar_bg} size="xs" />
+          {!collapsed && node.children.length > 0 && (
+            <div className="w-px flex-1 bg-smoke-5 group-hover:bg-blue-4 transition-colors" />
+          )}
+        </button>
+
+        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-kode-mono text-[11px] leading-[1.4] text-dark-space font-bold">{node.profiles.display_name}</span>
+            <span className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5">{formatRelativeTime(node.created_at)}</span>
+            {collapsed && replyCount > 0 && (
+              <span className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5">
+                [{replyCount} {replyCount === 1 ? "reply" : "replies"}]
+              </span>
+            )}
+          </div>
+
+          {collapsed && (
+            <button
+              type="button"
+              onClick={() => setCollapsed(false)}
+              className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5 truncate cursor-pointer hover:text-smoke-2 transition-colors text-left"
+            >
+              {node.body.length > 120 ? node.body.slice(0, 120) + "..." : node.body}
             </button>
+          )}
+
+          {!collapsed && (
+            <>
+              <div className="font-kode-mono text-[13px] leading-[1.5] text-sand-6 **:text-[13px]! **:leading-[1.5]! **:font-[inherit]! **:text-sand-6!">
+                <Markdown>{node.body}</Markdown>
+              </div>
+              <div className="flex items-center gap-3">
+                {currentUserId && <ReplyForm postId={postId} parentId={node.id} />}
+                {canDelete && (
+                  <button onClick={() => deleteComment(node.id, postId)} className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5 hover:text-orange-1 transition-colors">
+                    delete
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(true)}
+                  className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5 hover:text-blue-4 transition-colors cursor-pointer"
+                >
+                  collapse
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
-      {node.children.map((child) => (
+
+      {!collapsed && node.children.map((child) => (
         <CommentNode key={child.id} node={child} postId={postId} currentUserId={currentUserId} depth={depth + 1} isAdmin={isAdmin} />
       ))}
     </div>
@@ -88,7 +138,7 @@ function ReplyForm({ postId, parentId }: { postId: string; parentId: string | nu
 
   return (
     <details ref={detailsRef} className="group">
-      <summary className="label-s-regular text-smoke-5 hover:text-blue-4 transition-colors cursor-pointer">reply</summary>
+      <summary className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5 hover:text-blue-4 transition-colors cursor-pointer">reply</summary>
       <form
         ref={formRef}
         action={async (formData) => {
@@ -124,7 +174,11 @@ export default function CommentSection({ postId, comments, currentUserId, isAdmi
 
   return (
     <section className="flex flex-col gap-2">
-      <h6 className="h7 text-dark-space">Comments ({comments.length})</h6>
+      <div className="flex flex-col">
+        {tree.map((node) => (
+          <CommentNode key={node.id} node={node} postId={postId} currentUserId={currentUserId} depth={0} isAdmin={isAdmin} />
+        ))}
+      </div>
 
       {currentUserId ? (
         <form
@@ -152,12 +206,6 @@ export default function CommentSection({ postId, comments, currentUserId, isAdmi
       ) : (
         <p className="paragraph-s text-smoke-5">Sign in to comment.</p>
       )}
-
-      <div className="flex flex-col">
-        {tree.map((node) => (
-          <CommentNode key={node.id} node={node} postId={postId} currentUserId={currentUserId} depth={0} isAdmin={isAdmin} />
-        ))}
-      </div>
     </section>
   );
 }

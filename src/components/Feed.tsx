@@ -215,7 +215,7 @@ export default function Feed({
 
   return (
     <Wrapper {...wrapperProps}>
-      {showTypeHeading && <SectionHeading>{activeSortHeading}</SectionHeading>}
+      {showTypeHeading && <SectionHeading variant="white">{activeSortHeading}</SectionHeading>}
 
       {!hideFilters && (
         <>

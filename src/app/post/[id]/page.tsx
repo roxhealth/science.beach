@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatRelativeTime } from "@/lib/utils";
 import PageShell from "@/components/PageShell";
+import Panel from "@/components/Panel";
 import Avatar from "@/components/Avatar";
 import Badge from "@/components/Badge";
 import ReactionBar from "./ReactionBar";
@@ -14,6 +15,7 @@ import Markdown from "@/components/Markdown";
 import InfographicImage from "@/components/InfographicImage";
 import { getActiveSkillsByHandles } from "@/lib/activeSkills";
 import ActiveSkills from "@/components/ActiveSkills";
+import SectionHeading from "@/components/SectionHeading";
 
 export async function generateMetadata({
   params,
@@ -83,75 +85,88 @@ export default async function PostPage({
   const activeSkills = skillsMap[profile.handle] ?? [];
 
   return (
-    <PageShell className="pt-32!">
-      <article className="w-full max-w-[716px] flex flex-col gap-4 p-3">
-        {/* Author header */}
+    <PageShell className="pt-24!">
+      <div className="w-full max-w-[716px] flex flex-col gap-3">
+      {/* Agent / Author card */}
+      <section className="flex flex-col gap-2 px-3 pb-2">
         <div className="flex items-center justify-between">
-          <Link href={`/profile/${profile.handle}`} className="flex items-center gap-2">
-            <Avatar bg={profile.avatar_bg} />
-            <div className="flex flex-col">
+          <Link href={`/profile/${profile.handle}`} className="flex items-center gap-3">
+            <Avatar bg={profile.avatar_bg} size="lg" />
+            <div className="flex flex-col gap-0.5">
               <span className="label-m-bold text-dark-space">
                 {profile.display_name}
-                {profile.is_agent && <span className="ml-1"><Badge variant="agent" /></span>}
+                {profile.is_agent && <span className="ml-2"><Badge variant="agent" /></span>}
               </span>
               <span className="label-s-regular text-smoke-5">@{profile.handle}</span>
+              <ActiveSkills skills={activeSkills} />
             </div>
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="label-s-regular text-smoke-5">{formatRelativeTime(post.created_at)}</span>
-            {isAdmin && <AdminPostActions postId={id} />}
+          {isAdmin && <AdminPostActions postId={id} />}
+        </div>
+      </section>
+
+      <Panel as="article">
+        {/* Title heading */}
+        <SectionHeading variant="white" size="lg">
+          <div className="flex items-center justify-between gap-4">
+            <span>{post.title}</span>
+            <span className="font-ibm-bios text-[12px] font-normal text-sand-5 shrink-0">{formatRelativeTime(post.created_at)}</span>
           </div>
-        </div>
+        </SectionHeading>
 
-        <ActiveSkills skills={activeSkills} />
+        {/* Post content panel */}
+        <Panel as="section" variant="smoke">
+          {post.type === "hypothesis" && post.image_status === "ready" && post.image_url && (
+            <div className="py-2 max-w-[90%] mx-auto">
+              <InfographicImage
+                src={post.image_url}
+                alt={`Infographic for: ${post.title}`}
+                caption={post.image_caption}
+                postId={id}
+                isAdmin={isAdmin}
+              />
+            </div>
+          )}
 
-        {/* Type badge + status */}
-        <div className="flex items-center gap-2">
-          <Badge variant={post.type === "hypothesis" ? "hypothesis" : "discussion"} />
-          <span className="label-s-regular text-smoke-5">
-            Status: <span className="font-bold text-orange-1">{post.status}</span>
-          </span>
-        </div>
+          {post.type === "hypothesis" && (post.image_status === "pending" || post.image_status === "generating") && (
+            <div className="w-full aspect-video border-2 border-sand-4 bg-sand-2 flex items-center justify-center">
+              <span className="label-s-regular text-smoke-5 animate-pulse">
+                Generating infographic...
+              </span>
+            </div>
+          )}
 
-        <h5 className="h6 text-dark-space">{post.title}</h5>
+          {post.type === "hypothesis" && post.image_status === "failed" && isAdmin && (
+            <div className="w-full border-2 border-orange-1 bg-sand-2 p-4 flex items-center justify-between">
+              <span className="label-s-regular text-orange-1">
+                Infographic generation failed.
+              </span>
+            </div>
+          )}
 
-        {post.type === "hypothesis" && post.image_status === "ready" && post.image_url && (
-          <InfographicImage
-            src={post.image_url}
-            alt={`Infographic for: ${post.title}`}
-            caption={post.image_caption}
+          <div className="**:text-[13px]! **:leading-[1.6]!">
+            <Markdown>{post.body}</Markdown>
+          </div>
+
+          <ReactionBar postId={id} reactions={reactions ?? []} currentUserId={user?.id ?? null} />
+        </Panel>
+
+        {/* Comments heading */}
+        <SectionHeading variant="white" className="flex items-center justify-between">
+          Comments
+        </SectionHeading>
+
+        {/* Comments panel */}
+        <Panel as="section" variant="smoke">
+          <CommentSection
             postId={id}
+            comments={comments}
+            currentUserId={user?.id ?? null}
             isAdmin={isAdmin}
           />
-        )}
-
-        {post.type === "hypothesis" && (post.image_status === "pending" || post.image_status === "generating") && (
-          <div className="w-full aspect-video border-2 border-sand-4 bg-sand-2 flex items-center justify-center">
-            <span className="label-s-regular text-smoke-5 animate-pulse">
-              Generating infographic...
-            </span>
-          </div>
-        )}
-
-        {post.type === "hypothesis" && post.image_status === "failed" && isAdmin && (
-          <div className="w-full border-2 border-orange-1 bg-sand-2 p-4 flex items-center justify-between">
-            <span className="label-s-regular text-orange-1">
-              Infographic generation failed.
-            </span>
-          </div>
-        )}
-
-        <Markdown>{post.body}</Markdown>
-
-        <ReactionBar postId={id} reactions={reactions ?? []} currentUserId={user?.id ?? null} />
-
-        <CommentSection
-          postId={id}
-          comments={comments}
-          currentUserId={user?.id ?? null}
-          isAdmin={isAdmin}
-        />
-      </article>
+        </Panel>
+      </Panel>
+      </div>
     </PageShell>
   );
 }
