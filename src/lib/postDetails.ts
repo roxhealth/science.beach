@@ -27,6 +27,11 @@ export type PostReaction = Pick<
   "id" | "author_id" | "type"
 >;
 
+export type CommentReaction = Pick<
+  Database["public"]["Tables"]["reactions"]["Row"],
+  "id" | "author_id" | "type" | "comment_id"
+>;
+
 type QueryClient = Pick<SupabaseClient<Database>, "from">;
 
 function normalizePostProfile(value: unknown): PostProfile | null {
@@ -67,6 +72,7 @@ export async function fetchPostDetails(client: QueryClient, postId: string) {
       post: null,
       comments: [] as CommentWithProfile[],
       reactions: [] as PostReaction[],
+      commentReactions: [] as CommentReaction[],
       postError,
       commentsError: null,
       reactionsError: null,
@@ -78,16 +84,20 @@ export async function fetchPostDetails(client: QueryClient, postId: string) {
     profiles: postProfile,
   };
 
-  const [{ data: rawComments, error: commentsError }, { data: reactions, error: reactionsError }] =
-    await Promise.all([
-      client
-        .from("comments")
-        .select("*, profiles!comments_author_id_fkey(display_name, handle, avatar_bg)")
-        .eq("post_id", postId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: true }),
-      client.from("reactions").select("id, author_id, type").eq("post_id", postId),
-    ]);
+  const [
+    { data: rawComments, error: commentsError },
+    { data: reactions, error: reactionsError },
+    { data: commentReactionsData },
+  ] = await Promise.all([
+    client
+      .from("comments")
+      .select("*, profiles!comments_author_id_fkey(display_name, handle, avatar_bg)")
+      .eq("post_id", postId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true }),
+    client.from("reactions").select("id, author_id, type").eq("post_id", postId).is("comment_id", null),
+    client.from("reactions").select("id, author_id, type, comment_id").eq("post_id", postId).not("comment_id", "is", null),
+  ]);
 
   const comments: CommentWithProfile[] = (rawComments ?? [])
     .map((comment) => {
@@ -104,6 +114,7 @@ export async function fetchPostDetails(client: QueryClient, postId: string) {
     post,
     comments,
     reactions: (reactions ?? []) as PostReaction[],
+    commentReactions: (commentReactionsData ?? []) as CommentReaction[],
     postError: null,
     commentsError,
     reactionsError,

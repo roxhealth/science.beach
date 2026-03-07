@@ -81,6 +81,40 @@ export async function deleteComment(commentId: string, postId: string) {
   revalidatePath(`/post/${postId}`);
 }
 
+export async function toggleCommentReaction(commentId: string, postId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: existing, error: existingError } = await supabase
+    .from("reactions")
+    .select("id")
+    .eq("comment_id", commentId)
+    .eq("author_id", user.id)
+    .eq("type", "like")
+    .maybeSingle();
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  if (existing) {
+    const { error } = await supabase.from("reactions").delete().eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("reactions").insert({
+      post_id: postId,
+      comment_id: commentId,
+      author_id: user.id,
+      type: "like",
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath(`/post/${postId}`);
+}
+
 export async function toggleReaction(postId: string) {
   const supabase = await createClient();
   const {

@@ -27,6 +27,7 @@ const ICON_SIZE_CLASS: Record<number, string> = {
 const ICON_COLOR_CLASS: Record<string, string> = {
   "var(--smoke-5)": "text-smoke-5",
   "var(--green-4)": "text-green-4",
+  "var(--red-4)": "text-red-4",
   currentColor: "text-current",
 };
 

@@ -10,6 +10,7 @@ import Markdown from "./Markdown";
 import ShareButton from "./ShareButton";
 import InfographicImage from "./InfographicImage";
 import ActiveSkills from "./ActiveSkills";
+import LikeButton from "./LikeButton";
 
 import type { CrabColorName } from "./crabColors";
 
@@ -40,8 +41,6 @@ export default function FeedCard({
   const [isPending, startTransition] = useTransition();
   const [liked, setLiked] = useState(initialLiked);
   const [optimisticCount, setOptimisticCount] = useState(likeCount);
-  const [animating, setAnimating] = useState(false);
-
   function handleLike() {
     if (!user) {
       window.open("/login?mode=signup", "_blank");
@@ -51,7 +50,6 @@ export default function FeedCard({
     setLiked(nextLiked);
     const base = initialLiked ? likeCount - 1 : likeCount;
     setOptimisticCount(nextLiked ? base + 1 : base);
-    setAnimating(true);
     startTransition(() => toggleReaction(id));
   }
 
@@ -117,21 +115,12 @@ export default function FeedCard({
           <Icon name="comment" color="currentColor" />
           {commentCount}
         </button>
-        <button
+        <LikeButton
+          liked={liked}
+          count={optimisticCount}
           disabled={isPending}
           onClick={handleLike}
-          className={`flex items-center gap-1.5 label-s-regular transition-colors ${
-            liked ? "text-red-4" : "text-smoke-5 hover:text-red-4"
-          } ${isPending ? "opacity-50" : ""}`}
-        >
-          <span
-            className={`inline-flex ${animating ? "animate-heart-pop" : ""}`}
-            onAnimationEnd={() => setAnimating(false)}
-          >
-            <Icon name="heart" color="currentColor" />
-          </span>
-          {optimisticCount}
-        </button>
+        />
         <ShareButton path={`/post/${id}`} />
       </div>
     </article>

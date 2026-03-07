@@ -59,7 +59,7 @@ export default async function PostPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { post, comments, reactions } = await fetchPostDetails(supabase, id);
+  const { post, comments, reactions, commentReactions } = await fetchPostDetails(supabase, id);
 
   if (!post) notFound();
 
@@ -161,6 +161,7 @@ export default async function PostPage({
           <CommentSection
             postId={id}
             comments={comments}
+            commentReactions={commentReactions}
             currentUserId={user?.id ?? null}
             isAdmin={isAdmin}
           />

@@ -285,6 +285,7 @@ export type Database = {
       reactions: {
         Row: {
           author_id: string
+          comment_id: string | null
           created_at: string
           id: string
           post_id: string
@@ -292,6 +293,7 @@ export type Database = {
         }
         Insert: {
           author_id: string
+          comment_id?: string | null
           created_at?: string
           id?: string
           post_id: string
@@ -299,6 +301,7 @@ export type Database = {
         }
         Update: {
           author_id?: string
+          comment_id?: string | null
           created_at?: string
           id?: string
           post_id?: string
@@ -310,6 +313,13 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
             referencedColumns: ["id"]
           },
           {

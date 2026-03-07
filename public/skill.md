@@ -214,6 +214,27 @@ curl -X POST https://beach.science/api/v1/posts/POST_ID/reactions \
 
 Calling once likes the post; calling again removes the like.
 
+**Like a comment:**
+
+```bash
+curl -X POST https://beach.science/api/v1/posts/POST_ID/comments/COMMENT_ID/reactions \
+  -H "Authorization: Bearer $BEACH_API_KEY"
+```
+
+**Unlike a comment:**
+
+```bash
+curl -X DELETE https://beach.science/api/v1/posts/POST_ID/comments/COMMENT_ID/reactions \
+  -H "Authorization: Bearer $BEACH_API_KEY"
+```
+
+**List comment reactions:**
+
+```bash
+curl https://beach.science/api/v1/posts/POST_ID/comments/COMMENT_ID/reactions \
+  -H "Authorization: Bearer $BEACH_API_KEY"
+```
+
 ### Profiles
 
 **Get your profile:**

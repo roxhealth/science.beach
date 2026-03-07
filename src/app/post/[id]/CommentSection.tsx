@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { createComment, deleteComment } from "./actions";
+import { createComment, deleteComment, toggleCommentReaction } from "./actions";
 import { formatRelativeTime } from "@/lib/utils";
 import AvatarClient from "@/components/AvatarClient";
 import TextArea from "@/components/TextArea";
 import PixelButton from "@/components/PixelButton";
 import Markdown from "@/components/Markdown";
+import LikeButton from "@/components/LikeButton";
+import type { CommentReaction } from "@/lib/postDetails";
 
 type CommentWithProfile = {
   id: string;
@@ -26,6 +28,7 @@ type CommentWithProfile = {
 type Props = {
   postId: string;
   comments: CommentWithProfile[];
+  commentReactions: CommentReaction[];
   currentUserId: string | null;
   isAdmin?: boolean;
 };
@@ -54,13 +57,17 @@ function countDescendants(node: TreeNode): number {
 }
 
 function CommentNode({
-  node, postId, currentUserId, depth, isAdmin, defaultCollapsed,
+  node, postId, currentUserId, depth, isAdmin, defaultCollapsed, commentReactions,
 }: {
-  node: TreeNode; postId: string; currentUserId: string | null; depth: number; isAdmin?: boolean; defaultCollapsed?: boolean;
+  node: TreeNode; postId: string; currentUserId: string | null; depth: number; isAdmin?: boolean; defaultCollapsed?: boolean; commentReactions: CommentReaction[];
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? true);
+  const [isPending, startTransition] = useTransition();
   const canDelete = currentUserId === node.author_id || isAdmin;
   const replyCount = countDescendants(node);
+  const myReactions = commentReactions.filter((r) => r.comment_id === node.id);
+  const likeCount = myReactions.filter((r) => r.type === "like").length;
+  const hasLiked = myReactions.some((r) => r.author_id === currentUserId && r.type === "like");
 
   return (
     <div className={depth > 0 ? "ml-2 border-l border-smoke-5 pl-2 sm:ml-4 sm:pl-3" : ""}>
@@ -105,6 +112,13 @@ function CommentNode({
                 <Markdown>{node.body}</Markdown>
               </div>
               <div className="flex items-center gap-3">
+                <LikeButton
+                  liked={hasLiked}
+                  count={likeCount}
+                  disabled={isPending || !currentUserId}
+                  onClick={() => startTransition(() => toggleCommentReaction(node.id, postId))}
+                  size="sm"
+                />
                 {currentUserId && <ReplyForm postId={postId} parentId={node.id} />}
                 {canDelete && (
                   <button onClick={() => deleteComment(node.id, postId)} className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5 hover:text-orange-1 transition-colors">
@@ -125,7 +139,7 @@ function CommentNode({
       </div>
 
       {!collapsed && node.children.map((child) => (
-        <CommentNode key={child.id} node={child} postId={postId} currentUserId={currentUserId} depth={depth + 1} isAdmin={isAdmin} />
+        <CommentNode key={child.id} node={child} postId={postId} currentUserId={currentUserId} depth={depth + 1} isAdmin={isAdmin} commentReactions={commentReactions} />
       ))}
     </div>
   );
@@ -167,7 +181,7 @@ function ReplyForm({ postId, parentId }: { postId: string; parentId: string | nu
   );
 }
 
-export default function CommentSection({ postId, comments, currentUserId, isAdmin }: Props) {
+export default function CommentSection({ postId, comments, commentReactions, currentUserId, isAdmin }: Props) {
   const tree = buildTree(comments);
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -176,7 +190,7 @@ export default function CommentSection({ postId, comments, currentUserId, isAdmi
     <section className="flex flex-col gap-2">
       <div className="flex flex-col">
         {tree.map((node) => (
-          <CommentNode key={node.id} node={node} postId={postId} currentUserId={currentUserId} depth={0} isAdmin={isAdmin} />
+          <CommentNode key={node.id} node={node} postId={postId} currentUserId={currentUserId} depth={0} isAdmin={isAdmin} commentReactions={commentReactions} />
         ))}
       </div>
 

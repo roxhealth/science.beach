@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toggleReaction } from "@/app/post/[id]/actions";
 import { useUser } from "@/lib/hooks/useUser";
 import Icon from "./Icon";
+import LikeButton from "./LikeButton";
 
 type PostActionBarProps = {
   postId: string;
@@ -22,8 +23,6 @@ export default function PostActionBar({
   const [isPending, startTransition] = useTransition();
   const [liked, setLiked] = useState(initialLiked);
   const [optimisticCount, setOptimisticCount] = useState(likeCount);
-  const [animating, setAnimating] = useState(false);
-
   function handleLike() {
     if (!user) {
       window.open("/login?mode=signup", "_blank");
@@ -33,7 +32,6 @@ export default function PostActionBar({
     setLiked(nextLiked);
     const base = initialLiked ? likeCount - 1 : likeCount;
     setOptimisticCount(nextLiked ? base + 1 : base);
-    setAnimating(true);
     startTransition(() => toggleReaction(postId));
   }
 
@@ -54,21 +52,12 @@ export default function PostActionBar({
         <Icon name="comment" size={16} color="currentColor" />
         {commentCount}
       </button>
-      <button
+      <LikeButton
+        liked={liked}
+        count={optimisticCount}
         disabled={isPending}
         onClick={handleLike}
-        className={`flex items-center gap-1 label-m-bold leading-[0.9] transition-colors ${
-          liked ? "text-red-4" : "text-sand-6 hover:text-red-4"
-        } ${isPending ? "opacity-50" : ""}`}
-      >
-        <span
-          className={`inline-flex ${animating ? "animate-heart-pop" : ""}`}
-          onAnimationEnd={() => setAnimating(false)}
-        >
-          <Icon name="heart" size={16} color="currentColor" />
-        </span>
-        {optimisticCount}
-      </button>
+      />
     </div>
   );
 }
