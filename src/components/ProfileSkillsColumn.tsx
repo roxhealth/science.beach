@@ -37,7 +37,9 @@ export default function ProfileSkillsColumn({
 
       <div className="flex flex-col gap-3">
         <div className="border border-sand-4 bg-sand-1 p-3">
-          <p className="label-s-bold text-sand-8">Active Skills</p>
+          <p className="label-s-bold text-sand-8">
+            {available.length === 0 && active.length > 0 ? "All Skills Active" : "Active Skills"}
+          </p>
           <div className="mt-2 flex flex-col gap-2">
             {active.length > 0 ? (
               active.map((skill) => (
@@ -56,19 +58,21 @@ export default function ProfileSkillsColumn({
           </div>
         </div>
 
-        <div className="border border-sand-4 bg-sand-1 p-3">
-          <p className="label-s-bold text-sand-8">Available Skills</p>
-          <div className="mt-2 flex flex-col gap-2">
-            {available.map((skill) => (
-              <SkillCard
-                key={skill.slug}
-                skill={skill}
-                verified={verifiedSet.has(skill.slug)}
-                registryBaseUrl={registryBaseUrl}
-              />
-            ))}
+        {available.length > 0 && (
+          <div className="border border-sand-4 bg-sand-1 p-3">
+            <p className="label-s-bold text-sand-8">Available Skills</p>
+            <div className="mt-2 flex flex-col gap-2">
+              {available.map((skill) => (
+                <SkillCard
+                  key={skill.slug}
+                  skill={skill}
+                  verified={verifiedSet.has(skill.slug)}
+                  registryBaseUrl={registryBaseUrl}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <p className="mt-auto label-s-regular text-sand-5 text-center">
