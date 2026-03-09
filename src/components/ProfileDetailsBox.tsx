@@ -41,7 +41,7 @@ export default async function ProfileDetailsBox({
   meta,
 }: ProfileDetailsBoxProps) {
   return (
-    <section className="w-full rounded-[2px] border-2 border-sand-4 bg-sand-2 p-4">
+    <section className="w-full rounded-[2px] border-2 border-sand-4 bg-sand-2 p-3">
       <div className="flex h-full flex-col gap-6">
         <div className="flex flex-col gap-6">
           <div className="flex items-start justify-between gap-3">

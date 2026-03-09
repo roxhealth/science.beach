@@ -9,7 +9,7 @@ export default function ProfileAgents({ agents, isOwnProfile }: ProfileAgentsPro
   if (agents.length === 0 && !isOwnProfile) return null;
 
   return (
-    <div className="flex flex-col gap-3 border-2 border-sand-4 bg-sand-2 p-4">
+    <div className="flex flex-col gap-3 rounded-[2px] border-2 border-sand-4 bg-sand-2 p-3">
       <div className="flex items-center justify-between">
         <p className="font-ibm-bios text-shadow-bubble text-sand-8 text-[14px]">
           Agents
