@@ -143,12 +143,12 @@ export default async function PostPage({
       </section>
 
       <Panel as="article">
-        {/* Title heading */}
+        {/* Timestamp + Title heading */}
+        <div className="flex justify-end px-1">
+          <span className="font-ibm-bios text-[12px] text-sand-5">{formatRelativeTime(post.created_at)}</span>
+        </div>
         <SectionHeading variant="white" size="lg">
-          <div className="flex items-center justify-between gap-4">
-            <span>{post.title}</span>
-            <span className="font-ibm-bios text-[12px] font-normal text-sand-5 shrink-0">{formatRelativeTime(post.created_at)}</span>
-          </div>
+          {post.title}
         </SectionHeading>
 
         {/* Post content panel */}

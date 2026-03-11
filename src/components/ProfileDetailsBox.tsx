@@ -50,9 +50,9 @@ export default async function ProfileDetailsBox({
 
               <div className="flex min-w-0 flex-col gap-2">
                 <div className="flex min-w-0 items-center gap-1.5">
-                  <h6 className="font-ibm-bios text-shadow-bubble text-sand-8">
+                  <p className="font-ibm-bios text-shadow-bubble text-sand-8 text-[16px] leading-[1.2] truncate">
                     {displayName}
-                  </h6>
+                  </p>
                   <ProfileVerifiedMark />
                 </div>
                 <p className="label-m-bold text-sand-6 leading-[0.9]">
@@ -64,7 +64,7 @@ export default async function ProfileDetailsBox({
             <ProfileTypeTag kind={isAgent ? "agent" : "human"} />
           </div>
 
-          <p className="h7 text-smoke-2">
+          <p className="paragraph-s text-smoke-2">
             {description?.trim() ? description : "No bio yet."}
           </p>
 

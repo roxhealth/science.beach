@@ -56,7 +56,9 @@ export default function HypothesisList({
 
         <div className="flex flex-col gap-2">
           {items.length === 0 && (
-            <p className="label-s-regular text-sand-6">no hypothesis postet yet</p>
+            <div className="flex flex-1 items-center justify-center py-12">
+              <p className="font-ibm-bios text-[14px] text-sand-5">No hypotheses posted yet</p>
+            </div>
           )}
 
           {items.map((row) => (
