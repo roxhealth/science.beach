@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Icon from "./Icon";
 import type { SortMode, TimeWindow } from "@/lib/sort-modes";
 import { SORT_MODES, TIME_WINDOWS } from "@/lib/sort-modes";
 
@@ -21,7 +20,7 @@ export default function SortBar({
   const [mobileOpen, setMobileOpen] = useState(false);
   const activeConfig = SORT_MODES.find((m) => m.value === activeSort);
   const baseSortBtnClass =
-    "label-s-bold flex items-center gap-1.5 border px-2.5 py-1 min-h-8 leading-[0.9] transition-colors";
+    "label-s-bold border px-2.5 py-1 min-h-8 leading-[0.9] transition-colors";
   const activeSortBtnClass =
     "bg-blue-4 text-light-space border-blue-4 shadow-[0px_4px_0px_0px_var(--blue-5)]";
   const inactiveSortBtnClass =
@@ -41,10 +40,9 @@ export default function SortBar({
               onClick={() => onSortChange(mode.value)}
               className={`${baseSortBtnClass} ${
                 isActive ? activeSortBtnClass : inactiveSortBtnClass
-              } flex-1 justify-center`}
+              } flex-1 text-center`}
               title={mode.description}
             >
-              <Icon name={mode.icon} size={12} />
               {mode.label}
             </button>
           );
@@ -57,8 +55,7 @@ export default function SortBar({
           onClick={() => setMobileOpen(!mobileOpen)}
           className={`${baseSortBtnClass} ${activeSortBtnClass} w-full justify-between`}
         >
-          <span className="flex items-center gap-1.5">
-            <Icon name={activeConfig?.icon ?? "sort-breakthrough"} size={12} />
+          <span>
             {activeConfig?.label ?? "Sort"}
           </span>
           <span className="text-[10px]">{mobileOpen ? "▲" : "▼"}</span>
@@ -74,13 +71,12 @@ export default function SortBar({
                     onSortChange(mode.value);
                     setMobileOpen(false);
                   }}
-                  className={`label-s-regular flex items-center gap-1.5 px-2.5 py-1.5 transition-colors ${
+                  className={`label-s-regular px-2.5 py-1.5 transition-colors ${
                     isActive
                       ? "bg-blue-4 text-light-space"
                       : "bg-smoke-6 text-orange-1 hover:bg-smoke-7"
                   }`}
                 >
-                  <Icon name={mode.icon} size={12} />
                   {mode.label}
                   <span className="ml-auto text-[10px] opacity-60">
                     {mode.description}

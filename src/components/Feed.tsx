@@ -193,8 +193,6 @@ export default function Feed({
   }
 
   const isRandom = sortMode === "random_sample";
-  const hasMoreFiltersActive = search.trim().length > 0 || typeFilter !== "all";
-
   function handleLoadMore() {
     const filters = getFilters();
     trackFeedLoadMore({ action: isRandom ? "re_roll" : "load_more", current_count: allItems.length, sort_mode: sortMode });
@@ -233,45 +231,46 @@ export default function Feed({
       {showTypeHeading && <SectionHeading variant="white">{activeSortHeading}</SectionHeading>}
 
       {!hideFilters && (
-        <>
-          {/* Sort bar */}
-          <div className="border-2 border-sand-3 bg-sand-1 px-4 py-3 flex flex-col gap-2">
-            <SortBar
-              activeSort={sortMode}
-              activeTimeWindow={timeWindow}
-              onSortChange={handleSortChange}
-              onTimeWindowChange={handleTimeWindowChange}
-            />
-            <button
-              type="button"
-              aria-expanded={showMoreFilters}
-              aria-controls="feed-more-filters"
-              onClick={() => setShowMoreFilters((prev) => !prev)}
-              className="mt-1 inline-flex w-fit self-end items-center gap-1 label-s-regular leading-[0.9] text-sand-6 transition-colors hover:text-sand-8 focus:outline-none focus:text-sand-8"
-            >
-              <span
-                aria-hidden="true"
-                className={`text-[10px] transition-transform ${showMoreFilters ? "rotate-90" : ""}`}
-              >
-                &gt;
-              </span>
-              <span>More filters</span>
-              {hasMoreFiltersActive && (
-                <span className="label-s-bold text-blue-4">(active)</span>
-              )}
-            </button>
-          </div>
+        <div className="border-2 border-sand-3 bg-sand-1 px-4 py-3 flex flex-col gap-2">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search by title, author..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="border-2 border-sand-4 bg-sand-1 px-3 py-1.5 mono-s text-dark-space focus:outline-none focus:border-blue-4"
+          />
 
-          {/* Search and type filters */}
+          {/* Sort bar */}
+          <SortBar
+            activeSort={sortMode}
+            activeTimeWindow={timeWindow}
+            onSortChange={handleSortChange}
+            onTimeWindowChange={handleTimeWindowChange}
+          />
+
+          {/* More filters toggle */}
+          <button
+            type="button"
+            aria-expanded={showMoreFilters}
+            onClick={() => setShowMoreFilters((prev) => !prev)}
+            className="mt-1 inline-flex w-fit self-end items-center gap-1 label-s-regular leading-[0.9] text-sand-6 transition-colors hover:text-sand-8 focus:outline-none focus:text-sand-8"
+          >
+            <span
+              aria-hidden="true"
+              className={`text-[10px] transition-transform ${showMoreFilters ? "rotate-90" : ""}`}
+            >
+              &gt;
+            </span>
+            <span>More filters</span>
+            {typeFilter !== "all" && (
+              <span className="label-s-bold text-blue-4">(active)</span>
+            )}
+          </button>
+
+          {/* Type filters (collapsible) */}
           {showMoreFilters && (
-            <div id="feed-more-filters" className="flex flex-col gap-2 bg-sand-1 border-2 border-sand-3 p-3">
-              <input
-                type="text"
-                placeholder="Search by title, author..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="border-2 border-sand-4 bg-sand-1 px-3 py-1.5 mono-s text-dark-space focus:outline-none focus:border-blue-4"
-              />
+            <div className="flex flex-col gap-2">
               <div className="flex gap-0 w-full sm:w-auto">
                 {(["all", "hypothesis", "discussion"] as const).map((f) => (
                   <button
@@ -287,7 +286,7 @@ export default function Feed({
                   </button>
                 ))}
               </div>
-              {(search || typeFilter !== "all") && (
+              {typeFilter !== "all" && (
                 <p className="label-s-regular text-smoke-5">
                   {allItems.length} result{allItems.length !== 1 ? "s" : ""}
                   {hasMore ? "+" : ""}
@@ -296,7 +295,7 @@ export default function Feed({
               )}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Loading state */}
