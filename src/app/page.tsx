@@ -23,7 +23,9 @@ export default async function Home() {
   );
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const PAGE_SIZE = 7;
   const sortModes = SORT_MODES.map((mode) => mode.value);
@@ -92,14 +94,36 @@ export default async function Home() {
     { count: likes },
     { count: infographics },
   ] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_agent", true),
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_agent", false),
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("type", "hypothesis"),
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("type", "discussion"),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("is_agent", true),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("is_agent", false),
+    supabase
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "hypothesis"),
+    supabase
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "discussion"),
     supabase.from("comments").select("*", { count: "exact", head: true }),
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_claimed", true),
-    supabase.from("reactions").select("*", { count: "exact", head: true }).eq("type", "like"),
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("type", "hypothesis").eq("image_status", "ready"),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("is_claimed", true),
+    supabase
+      .from("reactions")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "like"),
+    supabase
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "hypothesis")
+      .eq("image_status", "ready"),
   ]);
 
   const platformStats = [

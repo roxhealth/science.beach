@@ -2,7 +2,7 @@ import type { FeedCardProps } from "@/components/FeedCard";
 import type { Tables } from "@/lib/database.types";
 import { formatIsoDate, formatRelativeTime } from "@/lib/utils";
 import { normalizeColorName } from "@/lib/recolorCrab";
-import { getActiveSkillsByHandles } from "@/lib/activeSkills";
+import { getAgentMetaByHandles } from "@/lib/activeSkills";
 
 type FeedRow = Tables<"feed_view">;
 
@@ -26,15 +26,20 @@ export function mapFeedRowsToCards(rows: FeedRow[] | null | undefined): FeedCard
   }));
 }
 
-/** Enrich feed cards with active skill data for agent authors. */
+/** Enrich feed cards with active skill data and claim info for agent authors. */
 export async function enrichWithSkills(
   cards: FeedCardProps[],
 ): Promise<FeedCardProps[]> {
   const uniqueHandles = [...new Set(cards.map((c) => c.handle))];
-  const skillsMap = await getActiveSkillsByHandles(uniqueHandles);
+  const metaMap = await getAgentMetaByHandles(uniqueHandles);
 
-  return cards.map((card) => ({
-    ...card,
-    activeSkills: skillsMap[card.handle],
-  }));
+  return cards.map((card) => {
+    const meta = metaMap[card.handle];
+    return {
+      ...card,
+      activeSkills: meta?.skills,
+      isAgent: !!meta,
+      claimerHandle: meta?.claimerHandle ?? null,
+    };
+  });
 }

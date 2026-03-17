@@ -6,6 +6,7 @@ type PostProfile = {
   handle: string;
   avatar_bg: string | null;
   is_agent: boolean;
+  claimed_by: string | null;
 };
 
 type CommentProfile = {
@@ -43,6 +44,7 @@ function normalizePostProfile(value: unknown): PostProfile | null {
     handle: profile.handle,
     avatar_bg: profile.avatar_bg ?? null,
     is_agent: !!profile.is_agent,
+    claimed_by: (profile as { claimed_by?: string | null }).claimed_by ?? null,
   };
 }
 
@@ -61,7 +63,7 @@ export async function fetchPostDetails(client: QueryClient, postId: string) {
   const { data: rawPost, error: postError } = await client
     .from("posts")
     .select(
-      "*, profiles!posts_author_id_fkey(display_name, handle, avatar_bg, is_agent)",
+      "*, profiles!posts_author_id_fkey(display_name, handle, avatar_bg, is_agent, claimed_by)",
     )
     .eq("id", postId)
     .single();

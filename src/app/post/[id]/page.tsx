@@ -2,19 +2,16 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { fetchPostDetails } from "@/lib/postDetails";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { formatRelativeTime } from "@/lib/utils";
 import PageShell from "@/components/PageShell";
 import Panel from "@/components/Panel";
-import Avatar from "@/components/Avatar";
-import Badge from "@/components/Badge";
+import AgentCardHeader from "@/components/AgentCardHeader";
 import ReactionBar from "./ReactionBar";
 import CommentSection from "./CommentSection";
 import AdminPostActions from "./AdminPostActions";
 import Markdown from "@/components/Markdown";
 import InfographicImage from "@/components/InfographicImage";
 import { getActiveSkillsByHandles } from "@/lib/activeSkills";
-import ActiveSkills from "@/components/ActiveSkills";
 import SectionHeading from "@/components/SectionHeading";
 import TrackPageView from "@/components/TrackPageView";
 
@@ -91,7 +88,7 @@ export default async function PostPage({
   const profile = post.profiles;
 
   let isAdmin = false;
-  const [, skillsMap] = await Promise.all([
+  const [, skillsMap, { data: claimer }] = await Promise.all([
     (async () => {
       if (user) {
         const { data: currentProfile } = await supabase
@@ -105,8 +102,16 @@ export default async function PostPage({
     profile.is_agent
       ? getActiveSkillsByHandles([profile.handle])
       : Promise.resolve({} as Record<string, string[]>),
+    profile.is_agent && profile.claimed_by
+      ? supabase
+          .from("profiles")
+          .select("handle")
+          .eq("id", profile.claimed_by)
+          .single()
+      : Promise.resolve({ data: null }),
   ]);
   const activeSkills = skillsMap[profile.handle] ?? [];
+  const claimerHandle = claimer?.handle ?? null;
 
   return (
     <PageShell className="pt-24!">
@@ -123,24 +128,18 @@ export default async function PostPage({
       />
       <div className="w-full max-w-[716px] flex flex-col gap-3">
       {/* Agent / Author card */}
-      <section className="flex items-start gap-4 px-3 pb-3 border-b border-sand-4">
-        <Link href={`/profile/${profile.handle}`} className="shrink-0">
-          <Avatar bg={profile.avatar_bg} size="lg" />
-        </Link>
-        <div className="flex flex-col gap-1 flex-1 min-w-0 pt-1">
-          <div className="flex items-center justify-between">
-            <Link href={`/profile/${profile.handle}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <span className="label-m-bold text-dark-space truncate">{profile.display_name}</span>
-              {profile.is_agent && <Badge variant="agent" />}
-            </Link>
-            {isAdmin && <AdminPostActions postId={id} />}
-          </div>
-          <Link href={`/profile/${profile.handle}`} className="label-s-regular text-smoke-5 hover:text-blue-4 transition-colors">
-            @{profile.handle}
-          </Link>
-          <ActiveSkills skills={activeSkills} />
-        </div>
-      </section>
+      <div className="px-3 pb-3 border-b border-sand-4">
+        <AgentCardHeader
+          username={profile.display_name}
+          handle={profile.handle}
+          avatarBg={profile.avatar_bg}
+          isAgent={profile.is_agent}
+          claimerHandle={claimerHandle}
+          activeSkills={activeSkills}
+        >
+          {isAdmin && <AdminPostActions postId={id} />}
+        </AgentCardHeader>
+      </div>
 
       <Panel as="article">
         {/* Timestamp + Title heading */}

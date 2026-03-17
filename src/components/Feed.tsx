@@ -50,7 +50,9 @@ export default function Feed({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"all" | "hypothesis" | "discussion">("all");
+  const [typeFilter, setTypeFilter] = useState<
+    "all" | "hypothesis" | "discussion"
+  >("all");
   const [sortMode, setSortMode] = useState<SortMode>("breakthrough");
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [isFiltered, setIsFiltered] = useState(false);
@@ -158,7 +160,11 @@ export default function Feed({
       const filters = getFilters({ search: value });
       fetchFiltered(filters);
       if (value.trim()) {
-        trackSearchPerformed({ query: value.trim(), result_count: allItems.length, has_more: hasMore });
+        trackSearchPerformed({
+          query: value.trim(),
+          result_count: allItems.length,
+          has_more: hasMore,
+        });
       }
     }, DEBOUNCE_MS);
   }
@@ -195,7 +201,11 @@ export default function Feed({
   const isRandom = sortMode === "random_sample";
   function handleLoadMore() {
     const filters = getFilters();
-    trackFeedLoadMore({ action: isRandom ? "re_roll" : "load_more", current_count: allItems.length, sort_mode: sortMode });
+    trackFeedLoadMore({
+      action: isRandom ? "re_roll" : "load_more",
+      current_count: allItems.length,
+      sort_mode: sortMode,
+    });
     startTransition(async () => {
       if (isRandom) {
         // Re-roll: replace feed with fresh random set
@@ -213,7 +223,11 @@ export default function Feed({
 
   function handleLoadAll() {
     const filters = getFilters();
-    trackFeedLoadMore({ action: "load_all", current_count: allItems.length, sort_mode: sortMode });
+    trackFeedLoadMore({
+      action: "load_all",
+      current_count: allItems.length,
+      sort_mode: sortMode,
+    });
     startTransition(async () => {
       const rest = await loadAllPosts(allItems.length, filters);
       setAllItems((prev) => [...prev, ...rest]);
@@ -224,11 +238,16 @@ export default function Feed({
   const Wrapper = bare ? "div" : Panel;
   const wrapperProps = bare
     ? { className: `flex flex-col gap-3 ${className}` }
-    : { as: "section" as const, className: `w-full max-w-[716px] ${className}` };
+    : {
+        as: "section" as const,
+        className: `w-full max-w-[716px] ${className}`,
+      };
 
   return (
     <Wrapper {...wrapperProps}>
-      {showTypeHeading && <SectionHeading variant="white">{activeSortHeading}</SectionHeading>}
+      {showTypeHeading && (
+        <SectionHeading variant="white">{activeSortHeading}</SectionHeading>
+      )}
 
       {!hideFilters && (
         <div className="border-2 border-sand-3 bg-sand-1 px-4 py-3 flex flex-col gap-2">
@@ -304,7 +323,9 @@ export default function Feed({
           <div className="relative h-1 w-32 overflow-hidden bg-smoke-7 border border-smoke-5">
             <div className="absolute inset-0 w-1/3 bg-blue-4 animate-feed-scan" />
           </div>
-          <p className="font-ibm-bios text-[11px] text-smoke-5">Analyzing data...</p>
+          <p className="font-ibm-bios text-[11px] text-smoke-5">
+            Analyzing data...
+          </p>
         </div>
       )}
 
@@ -314,9 +335,15 @@ export default function Feed({
           {isFiltered ? "No matching posts found" : "No hypothesis yet"}
         </p>
       )}
-      <div className={`flex flex-col gap-3 transition-opacity duration-200 ${isPending && allItems.length > 0 ? "opacity-50 pointer-events-none" : ""}`}>
+      <div
+        className={`flex flex-col gap-3 transition-opacity duration-200 ${isPending && allItems.length > 0 ? "opacity-50 pointer-events-none" : ""}`}
+      >
         {allItems.map((item, i) => (
-          <FeedCard key={item.id || `feed-${i}`} {...item} initialLiked={likedPostIds.includes(item.id)} />
+          <FeedCard
+            key={item.id || `feed-${i}`}
+            {...item}
+            initialLiked={likedPostIds.includes(item.id)}
+          />
         ))}
       </div>
 

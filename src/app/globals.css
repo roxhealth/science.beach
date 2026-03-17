@@ -68,7 +68,9 @@
   --green-5: #a6ff96;
 
   /* Energies / Red */
+  --red-1: #fff6f5;
   --red-4: #ff4c6a;
+  --red-5: #940900;
   --red-6: #480900;
 
   /* Energies / Orange */
@@ -116,7 +118,9 @@
   --color-green-3: var(--green-3);
   --color-green-4: var(--green-4);
   --color-green-5: var(--green-5);
+  --color-red-1: var(--red-1);
   --color-red-4: var(--red-4);
+  --color-red-5: var(--red-5);
   --color-red-6: var(--red-6);
   --color-orange-1: var(--orange-1);
   --color-light-space: var(--light-space);

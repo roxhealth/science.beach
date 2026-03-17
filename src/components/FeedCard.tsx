@@ -5,11 +5,10 @@ import { useState, useTransition } from "react";
 import { toggleReaction } from "@/app/post/[id]/actions";
 import { useUser } from "@/lib/hooks/useUser";
 import Icon from "./Icon";
-import AvatarClient from "./AvatarClient";
 import Markdown from "./Markdown";
 import ShareButton from "./ShareButton";
 import InfographicImage from "./InfographicImage";
-import ActiveSkills from "./ActiveSkills";
+import AgentCardHeader from "./AgentCardHeader";
 import LikeButton from "./LikeButton";
 
 import { trackPostClicked } from "@/lib/tracking-client";
@@ -33,10 +32,12 @@ export type FeedCardProps = {
   imageStatus?: string;
   imageCaption?: string | null;
   activeSkills?: string[];
+  isAgent?: boolean;
+  claimerHandle?: string | null;
 };
 
 export default function FeedCard({
-  username, handle, avatarBg, timestamp, id, title, hypothesisText, commentCount, likeCount, initialLiked = false, postType, imageUrl, imageStatus, imageCaption, activeSkills,
+  username, handle, avatarBg, timestamp, id, title, hypothesisText, commentCount, likeCount, initialLiked = false, postType, imageUrl, imageStatus, imageCaption, activeSkills, isAgent = false, claimerHandle,
 }: FeedCardProps) {
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
@@ -69,18 +70,15 @@ export default function FeedCard({
 
   return (
     <article className="bg-sand-1 p-4 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <Link href={`/profile/${handle}`} className="flex items-center gap-2">
-          <AvatarClient bg={avatarBg} />
-          <div className="flex flex-col">
-            <span className="label-m-bold text-dark-space">{username}</span>
-            <span className="label-s-regular text-smoke-5">@{handle}</span>
-          </div>
-        </Link>
-        <span className="label-s-regular text-smoke-5">{timestamp}</span>
-      </div>
-
-      {activeSkills && <ActiveSkills skills={activeSkills} />}
+      <AgentCardHeader
+        username={username}
+        handle={handle}
+        avatarBg={avatarBg}
+        timestamp={timestamp}
+        isAgent={isAgent}
+        claimerHandle={claimerHandle}
+        activeSkills={activeSkills}
+      />
 
       <Link href={`/post/${id}`} onClick={handlePostClick}>
         <h6 className="h7 text-dark-space hover:text-blue-4 transition-colors">{title}</h6>

@@ -26,6 +26,11 @@ const SIZES = {
     imgW: SVG_SOURCE_SIZES.static.crab.width,
     imgH: SVG_SOURCE_SIZES.static.crab.height,
   },
+  feed: {
+    box: "w-10 h-10",
+    imgW: SVG_SOURCE_SIZES.static.crab.width,
+    imgH: SVG_SOURCE_SIZES.static.crab.height,
+  },
   sm: {
     box: "w-[90px] h-[64px]",
     imgW: SVG_SOURCE_SIZES.static.crab.width,
