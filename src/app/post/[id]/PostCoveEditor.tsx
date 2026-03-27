@@ -48,6 +48,8 @@ export default function PostCoveEditor({
     }
   }
 
+  if (!coveName && !isAuthor) return null;
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {coveName && coveSlug ? (
@@ -57,9 +59,9 @@ export default function PostCoveEditor({
         >
           {coveName}
         </Link>
-      ) : (
+      ) : isAuthor ? (
         <span className="label-s-regular text-smoke-5">No cove assigned</span>
-      )}
+      ) : null}
 
       {isAuthor && !editing && (
         <button

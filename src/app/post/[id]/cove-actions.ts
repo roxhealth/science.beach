@@ -2,8 +2,16 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+const paramsSchema = z.object({
+  postId: z.string().uuid(),
+  coveId: z.string().uuid(),
+});
 
 export async function updatePostCove(postId: string, coveId: string) {
+  const parsed = paramsSchema.safeParse({ postId, coveId });
+  if (!parsed.success) return { error: "Invalid parameters" };
   const supabase = await createClient();
   const {
     data: { user },
