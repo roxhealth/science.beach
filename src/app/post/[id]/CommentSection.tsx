@@ -10,7 +10,8 @@ import PixelButton from "@/components/PixelButton";
 import Markdown from "@/components/Markdown";
 import LikeButton from "@/components/LikeButton";
 import { trackCommentLiked } from "@/lib/tracking-client";
-import type { CommentReaction } from "@/lib/postDetails";
+import type { CommentReaction, PostVote } from "@/lib/postDetails";
+import VoteBadge from "@/components/VoteBadge";
 
 type CommentWithProfile = {
   id: string;
@@ -32,6 +33,7 @@ type Props = {
   commentReactions: CommentReaction[];
   currentUserId: string | null;
   isAdmin?: boolean;
+  postVotes?: PostVote[];
 };
 
 type TreeNode = CommentWithProfile & { children: TreeNode[] };
@@ -58,9 +60,9 @@ function countDescendants(node: TreeNode): number {
 }
 
 function CommentNode({
-  node, postId, currentUserId, depth, isAdmin, defaultCollapsed, commentReactions,
+  node, postId, currentUserId, depth, isAdmin, defaultCollapsed, commentReactions, postVotes,
 }: {
-  node: TreeNode; postId: string; currentUserId: string | null; depth: number; isAdmin?: boolean; defaultCollapsed?: boolean; commentReactions: CommentReaction[];
+  node: TreeNode; postId: string; currentUserId: string | null; depth: number; isAdmin?: boolean; defaultCollapsed?: boolean; commentReactions: CommentReaction[]; postVotes?: PostVote[];
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? true);
   const [isPending, startTransition] = useTransition();
@@ -87,13 +89,16 @@ function CommentNode({
         </button>
 
         <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-kode-mono text-[11px] leading-[1.4] text-dark-space font-bold">{node.profiles.display_name}</span>
             <span className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5">{formatRelativeTime(node.created_at)}</span>
             {collapsed && replyCount > 0 && (
               <span className="font-kode-mono text-[11px] leading-[1.4] text-smoke-5">
                 [{replyCount} {replyCount === 1 ? "reply" : "replies"}]
               </span>
+            )}
+            {postVotes && postVotes.filter((v) => v.author_id === node.author_id).length > 0 && (
+              <VoteBadge votes={postVotes.filter((v) => v.author_id === node.author_id)} />
             )}
           </div>
 
@@ -140,7 +145,7 @@ function CommentNode({
       </div>
 
       {!collapsed && node.children.map((child) => (
-        <CommentNode key={child.id} node={child} postId={postId} currentUserId={currentUserId} depth={depth + 1} isAdmin={isAdmin} commentReactions={commentReactions} />
+        <CommentNode key={child.id} node={child} postId={postId} currentUserId={currentUserId} depth={depth + 1} isAdmin={isAdmin} commentReactions={commentReactions} postVotes={postVotes} />
       ))}
     </div>
   );
@@ -182,7 +187,7 @@ function ReplyForm({ postId, parentId }: { postId: string; parentId: string | nu
   );
 }
 
-export default function CommentSection({ postId, comments, commentReactions, currentUserId, isAdmin }: Props) {
+export default function CommentSection({ postId, comments, commentReactions, currentUserId, isAdmin, postVotes }: Props) {
   const tree = buildTree(comments);
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -192,7 +197,7 @@ export default function CommentSection({ postId, comments, commentReactions, cur
     <section className="flex flex-col gap-2">
       <div className="flex flex-col">
         {tree.map((node) => (
-          <CommentNode key={node.id} node={node} postId={postId} currentUserId={currentUserId} depth={0} isAdmin={isAdmin} commentReactions={commentReactions} />
+          <CommentNode key={node.id} node={node} postId={postId} currentUserId={currentUserId} depth={0} isAdmin={isAdmin} commentReactions={commentReactions} postVotes={postVotes} />
         ))}
       </div>
 

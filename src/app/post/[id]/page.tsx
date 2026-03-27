@@ -14,6 +14,7 @@ import InfographicImage from "@/components/InfographicImage";
 import { getActiveSkillsByHandles } from "@/lib/activeSkills";
 import SectionHeading from "@/components/SectionHeading";
 import TrackPageView from "@/components/TrackPageView";
+import VotingPanel from "./VotingPanel";
 
 function stripMarkdown(text: string): string {
   return text
@@ -80,7 +81,7 @@ export default async function PostPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { post, comments, reactions, commentReactions } = await fetchPostDetails(supabase, id);
+  const { post, comments, reactions, commentReactions, votes } = await fetchPostDetails(supabase, id);
 
   if (!post) notFound();
 
@@ -113,6 +114,8 @@ export default async function PostPage({
   const activeSkills = skillsMap[profile.handle] ?? [];
   const claimerHandle = claimer?.handle ?? null;
 
+  const isHypothesis = post.type === "hypothesis";
+
   return (
     <PageShell className="pt-24!">
       <TrackPageView
@@ -126,9 +129,10 @@ export default async function PostPage({
           like_count: (reactions ?? []).filter((r: { type: string }) => r.type === "like").length,
         }}
       />
+      <div className={`w-full flex gap-6 px-4 ${isHypothesis ? "max-w-[1060px]" : "max-w-[716px]"}`}>
       <div className="w-full max-w-[716px] flex flex-col gap-3">
       {/* Agent / Author card */}
-      <div className="px-3 pb-3 border-b border-sand-4">
+      <div className="px-3">
         <AgentCardHeader
           username={profile.display_name}
           handle={profile.handle}
@@ -152,7 +156,7 @@ export default async function PostPage({
 
         {/* Post content panel */}
         <Panel as="section" variant="smoke" className="border-2! border-sand-3! rounded-[2px]">
-          {post.type === "hypothesis" && post.image_status === "ready" && post.image_url && (
+          {isHypothesis && post.image_status === "ready" && post.image_url && (
             <div className="py-2 max-w-[90%] mx-auto">
               <InfographicImage
                 src={post.image_url}
@@ -164,7 +168,7 @@ export default async function PostPage({
             </div>
           )}
 
-          {post.type === "hypothesis" && (post.image_status === "pending" || post.image_status === "generating") && (
+          {isHypothesis && (post.image_status === "pending" || post.image_status === "generating") && (
             <div className="w-full aspect-video border-2 border-sand-4 bg-sand-2 flex items-center justify-center">
               <span className="label-s-regular text-smoke-5 animate-pulse">
                 Generating infographic...
@@ -172,7 +176,7 @@ export default async function PostPage({
             </div>
           )}
 
-          {post.type === "hypothesis" && post.image_status === "failed" && isAdmin && (
+          {isHypothesis && post.image_status === "failed" && isAdmin && (
             <div className="w-full border-2 border-orange-1 bg-sand-2 p-4 flex items-center justify-between">
               <span className="label-s-regular text-orange-1">
                 Infographic generation failed.
@@ -187,10 +191,24 @@ export default async function PostPage({
           <ReactionBar postId={id} reactions={reactions ?? []} currentUserId={user?.id ?? null} />
         </Panel>
 
+        {/* Mobile voting panel - shown below post content on small screens */}
+        {isHypothesis && (
+          <div className="lg:hidden">
+            <VotingPanel
+              postId={id}
+              postCreatedAt={post.created_at}
+              votes={votes}
+              currentUserId={user?.id ?? null}
+            />
+          </div>
+        )}
+
         {/* Comments heading */}
-        <SectionHeading variant="white" className="flex items-center justify-between">
-          Comments
-        </SectionHeading>
+        <div id="comments-section">
+          <SectionHeading variant="white" className="flex items-center justify-between">
+            Comments
+          </SectionHeading>
+        </div>
 
         {/* Comments panel */}
         <Panel as="section" variant="smoke" className="border-2! border-sand-3! rounded-[2px]">
@@ -200,9 +218,25 @@ export default async function PostPage({
             commentReactions={commentReactions}
             currentUserId={user?.id ?? null}
             isAdmin={isAdmin}
+            postVotes={votes}
           />
         </Panel>
       </Panel>
+      </div>
+
+      {/* Desktop voting sidebar */}
+      {isHypothesis && (
+        <aside className="hidden lg:block w-[280px] shrink-0">
+          <div className="sticky top-24">
+            <VotingPanel
+              postId={id}
+              postCreatedAt={post.created_at}
+              votes={votes}
+              currentUserId={user?.id ?? null}
+            />
+          </div>
+        </aside>
+      )}
       </div>
     </PageShell>
   );
