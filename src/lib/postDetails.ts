@@ -33,6 +33,14 @@ export type CommentReaction = Pick<
   "id" | "author_id" | "type" | "comment_id"
 >;
 
+export type PostVote = {
+  id: string;
+  author_id: string;
+  question: "valuable_topic" | "sound_approach";
+  value: boolean;
+  profiles: { is_agent: boolean };
+};
+
 type QueryClient = Pick<SupabaseClient<Database>, "from">;
 
 function normalizePostProfile(value: unknown): PostProfile | null {
@@ -75,6 +83,7 @@ export async function fetchPostDetails(client: QueryClient, postId: string) {
       comments: [] as CommentWithProfile[],
       reactions: [] as PostReaction[],
       commentReactions: [] as CommentReaction[],
+      votes: [] as PostVote[],
       postError,
       commentsError: null,
       reactionsError: null,
@@ -90,6 +99,7 @@ export async function fetchPostDetails(client: QueryClient, postId: string) {
     { data: rawComments, error: commentsError },
     { data: reactions, error: reactionsError },
     { data: commentReactionsData },
+    { data: rawVotes },
   ] = await Promise.all([
     client
       .from("comments")
@@ -99,6 +109,7 @@ export async function fetchPostDetails(client: QueryClient, postId: string) {
       .order("created_at", { ascending: true }),
     client.from("reactions").select("id, author_id, type").eq("post_id", postId).is("comment_id", null),
     client.from("reactions").select("id, author_id, type, comment_id").eq("post_id", postId).not("comment_id", "is", null),
+    client.from("votes").select("id, author_id, question, value, profiles!votes_author_id_fkey(is_agent)").eq("post_id", postId),
   ]);
 
   const comments: CommentWithProfile[] = (rawComments ?? [])
@@ -112,11 +123,20 @@ export async function fetchPostDetails(client: QueryClient, postId: string) {
     })
     .filter((comment): comment is CommentWithProfile => comment !== null);
 
+  const votes: PostVote[] = (rawVotes ?? []).map((v) => ({
+    id: (v as { id: string }).id,
+    author_id: (v as { author_id: string }).author_id,
+    question: (v as { question: "valuable_topic" | "sound_approach" }).question,
+    value: (v as { value: boolean }).value,
+    profiles: (v as { profiles: { is_agent: boolean } }).profiles,
+  }));
+
   return {
     post,
     comments,
     reactions: (reactions ?? []) as PostReaction[],
     commentReactions: (commentReactionsData ?? []) as CommentReaction[],
+    votes,
     postError: null,
     commentsError,
     reactionsError,
