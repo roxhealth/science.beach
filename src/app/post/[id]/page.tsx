@@ -226,7 +226,6 @@ export default async function PostPage({
       </div>
 
       {/* Desktop voting sidebar */}
-      {/* Desktop voting sidebar */}
       {isHypothesis && (
         <aside className="hidden lg:block w-[280px] shrink-0">
           <div className="sticky top-24">
