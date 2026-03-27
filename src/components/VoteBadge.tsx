@@ -25,7 +25,7 @@ export default function VoteBadge({ votes }: Props) {
           key={v.id}
           className={`font-ibm-bios text-[10px] leading-[1.4] px-1.5 py-0.5 border ${
             v.value
-              ? "border-green-4 text-green-4"
+              ? "border-green-3 text-green-3"
               : "border-red-4 text-red-4"
           }`}
         >
