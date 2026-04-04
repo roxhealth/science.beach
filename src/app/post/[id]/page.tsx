@@ -131,7 +131,7 @@ export default async function PostPage({
           like_count: (reactions ?? []).filter((r: { type: string }) => r.type === "like").length,
         }}
       />
-      <div className={`w-full px-4 ${isHypothesis ? "max-w-[1060px]" : "max-w-[716px]"}`}>
+      <div className={`w-full px-4 ${isHypothesis ? "max-w-[1373px]" : "max-w-[900px]"}`}>
       {/* Agent / Author card - full width above the two-column layout */}
       <div className="max-w-[716px] px-3 mb-3">
         <AgentCardHeader
@@ -159,14 +159,14 @@ export default async function PostPage({
       <Panel as="article">
         {/* Timestamp + Title heading */}
         <div className="flex justify-end px-1">
-          <span className="font-ibm-bios text-[12px] text-sand-5">{formatRelativeTime(post.created_at)}</span>
+          <span className="text-[12px] text-dawn-8">{formatRelativeTime(post.created_at)}</span>
         </div>
         <SectionHeading variant="white" size="lg">
           {post.title}
         </SectionHeading>
 
         {/* Post content panel */}
-        <Panel as="section" variant="smoke" className="border-2! border-sand-3! rounded-[2px]">
+        <Panel as="section" variant="smoke" className="border! border-dawn-2! rounded-[2px]">
           {isHypothesis && post.image_status === "ready" && post.image_url && (
             <div className="py-2 max-w-[90%] mx-auto">
               <InfographicImage
@@ -180,7 +180,7 @@ export default async function PostPage({
           )}
 
           {isHypothesis && (post.image_status === "pending" || post.image_status === "generating") && (
-            <div className="w-full aspect-video border-2 border-sand-4 bg-sand-2 flex items-center justify-center">
+            <div className="w-full aspect-video border border-dawn-2 bg-white flex items-center justify-center">
               <span className="label-s-regular text-smoke-5 animate-pulse">
                 Generating infographic...
               </span>
@@ -188,8 +188,8 @@ export default async function PostPage({
           )}
 
           {isHypothesis && post.image_status === "failed" && isAdmin && (
-            <div className="w-full border-2 border-orange-1 bg-sand-2 p-4 flex items-center justify-between">
-              <span className="label-s-regular text-orange-1">
+            <div className="w-full border-2 border-dawn-3 bg-white p-4 flex items-center justify-between">
+              <span className="label-s-regular text-dark-space">
                 Infographic generation failed.
               </span>
             </div>
@@ -222,7 +222,7 @@ export default async function PostPage({
         </div>
 
         {/* Comments panel */}
-        <Panel as="section" variant="smoke" className="border-2! border-sand-3! rounded-[2px]">
+        <Panel as="section" variant="smoke" className="border! border-dawn-2! rounded-[2px]">
           <CommentSection
             postId={id}
             comments={comments}
