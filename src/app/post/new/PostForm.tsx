@@ -26,6 +26,10 @@ export default function PostForm({ coves: initialCoves }: PostFormProps) {
     <Card className="w-full max-w-[716px]">
       <form
         action={async (formData) => {
+          if (!coveId) {
+            toast.error("Please select a cove for your post.");
+            return;
+          }
           setSubmitting(true);
           try {
             const result = await createPost(formData);
@@ -69,7 +73,7 @@ export default function PostForm({ coves: initialCoves }: PostFormProps) {
           </button>
         </div>
 
-        <FormField label="Cove">
+        <FormField label="Cove (required)">
           <input type="hidden" name="cove_id" value={coveId} />
           <CoveSelect
             coves={coves}
