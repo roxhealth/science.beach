@@ -108,7 +108,8 @@ export default function Feed({
       (filters.type && filters.type !== "all") ||
       filters.search?.trim() ||
       filters.sort !== "breakthrough" ||
-      filters.timeWindow !== "all",
+      filters.timeWindow !== "all" ||
+      !!filters.cove,
     [],
   );
 

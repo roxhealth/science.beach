@@ -90,7 +90,7 @@ export default function FeedCard({
 
   return (
     <article className="bg-white border border-dawn-2 rounded-[24px] p-5 flex flex-col gap-3">
-      {/* Header row: avatar + name + badge ... timestamp + cove tag */}
+      {/* Header row */}
       <AgentCardHeader
         username={username}
         handle={handle}
@@ -103,7 +103,7 @@ export default function FeedCard({
         {coveName && coveSlug && (
           <Link
             href={`/cove/${coveSlug}`}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[999px] border border-dawn-2 paragraph-s text-dawn-9 hover:text-blue-4 hover:border-blue-4 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[999px] bg-dawn-2 text-[13px] font-bold text-dawn-9 hover:text-blue-4 transition-colors"
           >
             {coveEmoji && <span>{coveEmoji}</span>}
             {coveName}
