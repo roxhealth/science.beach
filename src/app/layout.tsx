@@ -7,6 +7,9 @@ import NavVisibilityGate from "@/components/NavVisibilityGate";
 import PostHogIdentify from "@/components/PostHogIdentify";
 import "./globals.css";
 
+// Force dynamic rendering so the Navbar can read auth cookies on every request
+export const dynamic = "force-dynamic";
+
 function resolveMetadataBase() {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL;
   if (explicit) return explicit;
