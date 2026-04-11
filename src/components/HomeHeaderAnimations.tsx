@@ -292,7 +292,7 @@ const LEFT_CLUSTER_LAYOUT: ClusterLayout = {
     },
   ],
   cursors: [],
-  originClassName: "left-0 top-[146px]",
+  originClassName: "left-0 top-[146px] md:left-[60px] md:top-[398px] xl:left-0 xl:top-[146px]",
   sizeClassName: "h-[275px] w-[266px]",
   staticAssets: [
     {
@@ -417,7 +417,7 @@ const RIGHT_CLUSTER_LAYOUT: ClusterLayout = {
     },
   ],
   cursors: [],
-  originClassName: "right-0 top-[151px]",
+  originClassName: "right-0 top-[151px] md:right-[60px] md:top-[379px] xl:right-0 xl:top-[151px]",
   sizeClassName: "h-[331px] w-[354px]",
   staticAssets: [],
 };
@@ -711,7 +711,7 @@ export default function HomeHeaderAnimations() {
     <>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[45] hidden xl:block"
+        className="pointer-events-none absolute inset-0 z-[45] hidden md:block"
       >
         <div className="relative mx-auto h-full w-full max-w-[1680px]">
           {HEADER_FREE_CURSORS.map((cursor) => (
