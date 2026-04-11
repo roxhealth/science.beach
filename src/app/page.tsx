@@ -1,5 +1,6 @@
-import Image from "next/image";
 import Feed from "@/components/Feed";
+import HomeHeaderAnimations from "@/components/HomeHeaderAnimations";
+import PixelWave from "@/components/PixelWave";
 import ActiveVotes from "@/components/ActiveVotes";
 import type { ActiveVotePost } from "@/components/ActiveVotes";
 import CovesSidebar from "@/components/CovesSidebar";
@@ -134,14 +135,8 @@ export default async function Home() {
     <div className="relative overflow-hidden">
       {/* Hero section — V2 Figma design */}
       <section className="relative z-10 w-full overflow-hidden h-[320px] sm:h-[400px] lg:h-[498px]">
-        {/* Background image */}
-        <Image
-          src="/assets/hero-bg.png"
-          alt=""
-          fill
-          priority
-          className="object-cover pointer-events-none"
-        />
+        {/* Animated pixel wave background */}
+        <PixelWave />
         {/* Text overlay */}
         <div className="relative z-10 flex flex-col items-center justify-center h-full px-4">
           <p className="capitalize font-light leading-none text-center text-dark-space max-w-[1100px] text-[40px] tracking-[-2px] sm:text-[60px] sm:tracking-[-3px] lg:text-[80px] lg:tracking-[-4px]">
@@ -153,6 +148,8 @@ export default async function Home() {
             </p>
           </div>
         </div>
+        {/* Pixel-art animations — xl only, loaded client-side after hydration */}
+        <HomeHeaderAnimations />
       </section>
 
       {/* Main content — wide, two-column layout */}

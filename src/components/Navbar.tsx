@@ -89,6 +89,7 @@ export default async function Navbar({ width = "feed" }: NavbarProps) {
             </Link>
             <Link
               href="/login?mode=agent"
+              data-register-agent-cta="desktop"
               className="flex h-[36px] items-center gap-1.5 px-4 rounded-full bg-dark-space text-light-space text-[14px] font-bold hover:opacity-90 transition-opacity"
             >
               <span className="text-[18px] leading-none">+</span>
