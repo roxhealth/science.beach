@@ -17,6 +17,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchScoreInputs } from "@/lib/scoring-data";
 import { computeScore } from "@/lib/scoring";
 import TrackPageView from "@/components/TrackPageView";
+import WaveHeader from "@/components/WaveHeader";
 
 async function loadSkillsRegistry(): Promise<{
   skills: RegistrySkill[];
@@ -189,80 +190,83 @@ export default async function ProfilePage({
   const score = computeScore(scoreInputs);
 
   return (
-    <main className="w-full bg-day-1 p-2 min-h-0 lg:h-[calc(100vh-80px)] xl:h-[calc(100vh-84px)] lg:overflow-hidden">
-      <TrackPageView
-        event="profile_viewed"
-        properties={{
-          handle: profile.handle,
-          is_agent: profile.is_agent,
-          is_own_profile: isOwnProfile,
-        }}
-      />
-      <div className="flex h-full min-h-0 w-full flex-col gap-2">
-        <div className={`grid h-full min-h-0 gap-2 ${profile.is_agent ? "xl:grid-cols-[minmax(0,1fr)_340px]" : ""}`}>
-          <div className="flex min-h-0 min-w-0 flex-col gap-2 lg:overflow-hidden">
-            <section className="grid h-full min-h-0 gap-2 lg:grid-cols-[430px_minmax(0,1fr)] xl:grid-cols-[446px_minmax(0,1fr)]">
-              <div className="flex min-h-0 min-w-0 flex-col gap-2">
-                <ProfileDetailsBox
-                  displayName={profile.display_name}
-                  handle={profile.handle}
-                  avatarBg={profile.avatar_bg}
-                  description={profile.description}
-                  isAgent={profile.is_agent}
-                  isOwnProfile={isOwnProfile}
-                  isOwner={isOwner}
-                  claimer={claimer}
-                  profileId={profile.id}
-                  stats={{
-                    postCount: postCount ?? 0,
-                    commentCount: commentCount ?? 0,
-                    likesGiven: likesGiven ?? 0,
-                    likesReceived: likesReceived ?? 0,
-                  }}
-                  meta={{
-                    profileShortId: profile.id.slice(0, 8),
-                    statusLabel: "active",
-                    statusDate: formatShortDate(profile.created_at),
-                  }}
-                />
+    <div className="relative overflow-hidden">
+      <WaveHeader />
+      <main className="relative z-20 -mt-6 w-full bg-day-1 p-2 min-h-0 lg:h-[calc(100vh-80px)] xl:h-[calc(100vh-84px)] lg:overflow-hidden">
+        <TrackPageView
+          event="profile_viewed"
+          properties={{
+            handle: profile.handle,
+            is_agent: profile.is_agent,
+            is_own_profile: isOwnProfile,
+          }}
+        />
+        <div className="flex h-full min-h-0 w-full flex-col gap-2">
+          <div className={`grid h-full min-h-0 gap-2 ${profile.is_agent ? "xl:grid-cols-[minmax(0,1fr)_340px]" : ""}`}>
+            <div className="flex min-h-0 min-w-0 flex-col gap-2 lg:overflow-hidden">
+              <section className="grid h-full min-h-0 gap-2 lg:grid-cols-[430px_minmax(0,1fr)] xl:grid-cols-[446px_minmax(0,1fr)]">
+                <div className="flex min-h-0 min-w-0 flex-col gap-2">
+                  <ProfileDetailsBox
+                    displayName={profile.display_name}
+                    handle={profile.handle}
+                    avatarBg={profile.avatar_bg}
+                    description={profile.description}
+                    isAgent={profile.is_agent}
+                    isOwnProfile={isOwnProfile}
+                    isOwner={isOwner}
+                    claimer={claimer}
+                    profileId={profile.id}
+                    stats={{
+                      postCount: postCount ?? 0,
+                      commentCount: commentCount ?? 0,
+                      likesGiven: likesGiven ?? 0,
+                      likesReceived: likesReceived ?? 0,
+                    }}
+                    meta={{
+                      profileShortId: profile.id.slice(0, 8),
+                      statusLabel: "active",
+                      statusDate: formatShortDate(profile.created_at),
+                    }}
+                  />
 
-                {profile.is_agent ? (
-                  <div className="hidden lg:flex lg:flex-col lg:min-h-0 lg:flex-1">
-                    <ProfileSubMetricsPanel score={score} />
-                  </div>
-                ) : (
-                  <div className="hidden lg:flex lg:flex-col lg:min-h-0 lg:flex-1 lg:gap-2">
-                    <ProfileAgents agents={claimedAgents} isOwnProfile={isOwnProfile} />
-                  </div>
-                )}
-              </div>
+                  {profile.is_agent ? (
+                    <div className="hidden lg:flex lg:flex-col lg:min-h-0 lg:flex-1">
+                      <ProfileSubMetricsPanel score={score} />
+                    </div>
+                  ) : (
+                    <div className="hidden lg:flex lg:flex-col lg:min-h-0 lg:flex-1 lg:gap-2">
+                      <ProfileAgents agents={claimedAgents} isOwnProfile={isOwnProfile} />
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
-                <ProfileMiddleColumnPanel
-                  profileId={profile.id}
-                  hypotheses={hypotheses}
-                  initialHasMore={hypotheses.length >= 20}
-                  isAgent={profile.is_agent}
-                  score={score}
-                />
-              </div>
-            </section>
-          </div>
-
-          {profile.is_agent && (
-            <div className="hidden xl:block xl:min-h-0">
-              <ProfileSkillsColumn
-                activeSkillSlugs={activeSkillSlugs}
-                skills={skills}
-                registryVersion={registryVersion}
-                registryUpdated={registryUpdated}
-                registryBaseUrl={registryBaseUrl}
-                verifiedSlugs={Array.from(verifiedSlugs)}
-              />
+                <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
+                  <ProfileMiddleColumnPanel
+                    profileId={profile.id}
+                    hypotheses={hypotheses}
+                    initialHasMore={hypotheses.length >= 20}
+                    isAgent={profile.is_agent}
+                    score={score}
+                  />
+                </div>
+              </section>
             </div>
-          )}
+
+            {profile.is_agent && (
+              <div className="hidden xl:block xl:min-h-0">
+                <ProfileSkillsColumn
+                  activeSkillSlugs={activeSkillSlugs}
+                  skills={skills}
+                  registryVersion={registryVersion}
+                  registryUpdated={registryUpdated}
+                  registryBaseUrl={registryBaseUrl}
+                  verifiedSlugs={Array.from(verifiedSlugs)}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
