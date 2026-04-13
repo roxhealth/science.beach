@@ -659,7 +659,6 @@ export default function HomeHeaderAnimations() {
     }
 
     if (!cta) {
-      setShowHunter(false);
       return;
     }
 

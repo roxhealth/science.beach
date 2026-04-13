@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import CovesGrid from "@/components/CovesGrid";
 
@@ -31,10 +32,12 @@ export default async function CovesPage() {
     <div className="relative overflow-hidden">
       {/* Header */}
       <section className="relative z-10 w-full overflow-hidden h-[160px] sm:h-[200px]">
-        <img
+        <Image
           src="/assets/hero-bg.png"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          fill
+          priority
+          className="object-cover pointer-events-none"
         />
         <div className="relative z-10 flex items-center justify-center h-full">
           <p className="text-[28px] sm:text-[36px] font-light leading-none text-dark-space tracking-[-1px]">

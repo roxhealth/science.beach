@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { buildFeedCacheKey } from "@/lib/feed-cache";
 import { mapFeedRowsToCards, enrichWithSkills } from "@/lib/feed";
+import { getUserVoteMap } from "@/lib/reactions";
 import { SORT_MODES } from "@/lib/sort-modes";
 import { getAllCoves } from "@/lib/coves";
 import Feed from "@/components/Feed";
@@ -50,6 +52,7 @@ export default async function CovePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const userVotes = await getUserVoteMap(supabase, user?.id);
 
   const PAGE_SIZE = 7;
   const sortModes = SORT_MODES.map((mode) => mode.value);
@@ -65,7 +68,7 @@ export default async function CovePage({
         page_limit: PAGE_SIZE + 1,
         cove_filter: slug,
       });
-      const mapped = await enrichWithSkills(mapFeedRowsToCards(data));
+      const mapped = await enrichWithSkills(mapFeedRowsToCards(data, userVotes));
       return {
         key: buildFeedCacheKey({
           sort: sortMode,
@@ -96,16 +99,6 @@ export default async function CovePage({
   });
   const defaultPage = preloadedPages[defaultKey] ?? { items: [], hasMore: false };
 
-  let likedPostIds: string[] = [];
-  if (user) {
-    const { data: likes } = await supabase
-      .from("reactions")
-      .select("post_id")
-      .eq("author_id", user.id)
-      .eq("type", "like");
-    likedPostIds = (likes ?? []).map((r) => r.post_id);
-  }
-
   // Fetch coves for sidebar
   const { data: covesData } = await getAllCoves(supabase);
   const sidebarCoves = (covesData ?? []).slice(0, 6).map((c) => ({
@@ -123,10 +116,12 @@ export default async function CovePage({
     <div className="relative overflow-hidden">
       {/* Cove header — smaller hero with bg */}
       <section className="relative z-10 w-full overflow-hidden h-[200px] sm:h-[240px] lg:h-[260px]">
-        <img
+        <Image
           src="/assets/hero-bg.png"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          fill
+          priority
+          className="object-cover pointer-events-none"
         />
       </section>
 
@@ -148,12 +143,11 @@ export default async function CovePage({
           <div className="flex-1 min-w-0 flex flex-col gap-3">
             <Feed
               items={defaultPage.items}
-              likedPostIds={likedPostIds}
               initialHasMore={defaultPage.hasMore}
               preloadedPages={preloadedPages}
               coveSlug={slug}
+              initialCoveName={cove.name ?? null}
               bare
-              showTypeHeading
             />
           </div>
 

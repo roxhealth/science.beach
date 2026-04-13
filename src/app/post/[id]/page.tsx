@@ -88,18 +88,15 @@ export default async function PostPage({
   const { data: { user } } = await supabase.auth.getUser();
   const profile = post.profiles;
 
-  let isAdmin = false;
-  const [, skillsMap, { data: claimer }, { data: allCoves }] = await Promise.all([
-    (async () => {
-      if (user) {
-        const { data: currentProfile } = await supabase
+  const [currentProfile, skillsMap, { data: claimer }, { data: allCoves }] = await Promise.all([
+    user
+      ? supabase
           .from("profiles")
           .select("is_admin")
           .eq("id", user.id)
-          .single();
-        isAdmin = currentProfile?.is_admin === true;
-      }
-    })(),
+          .single()
+          .then(({ data }) => data)
+      : Promise.resolve(null),
     profile.is_agent
       ? getActiveSkillsByHandles([profile.handle])
       : Promise.resolve({} as Record<string, string[]>),
@@ -112,6 +109,7 @@ export default async function PostPage({
       : Promise.resolve({ data: null }),
     supabase.from("coves").select("id, name, slug").order("name"),
   ]);
+  const isAdmin = currentProfile?.is_admin === true;
   const activeSkills = skillsMap[profile.handle] ?? [];
   const claimerHandle = claimer?.handle ?? null;
 
