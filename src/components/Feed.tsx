@@ -4,7 +4,6 @@ import { useState, useTransition, useCallback, useRef, useEffect } from "react";
 import FeedCard, { type FeedCardProps } from "./FeedCard";
 import Panel from "./Panel";
 import PixelButton from "./PixelButton";
-import SortBar from "./SortBar";
 import {
   loadFirstPagePosts,
   loadMorePosts,
@@ -16,7 +15,6 @@ import { buildFeedCacheKey } from "@/lib/feed-cache";
 import { SORT_MODES, type SortMode, type TimeWindow } from "@/lib/sort-modes";
 import {
   trackFeedSortChanged,
-  trackFeedFilterChanged,
   trackSearchPerformed,
   trackFeedLoadMore,
 } from "@/lib/tracking-client";
@@ -65,7 +63,6 @@ export default function Feed({
   const [isFiltered, setIsFiltered] = useState(false);
   const [activeCove, setActiveCove] = useState<string | undefined>(coveSlug);
   const { setCoveName } = useFeedCove();
-  const activeConfig = SORT_MODES.find((mode) => mode.value === sortMode);
   const typeFilter: "all" | "hypothesis" | "discussion" = "all";
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -196,17 +193,10 @@ export default function Feed({
   function handleSortChange(sort: SortMode) {
     trackFeedSortChanged({ from_sort: sortMode, to_sort: sort });
     setSortMode(sort);
-    const newTimeWindow = sort === "most_cited" ? timeWindow : "all";
+    const newTimeWindow: TimeWindow = "all";
     setTimeWindow(newTimeWindow);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     fetchFiltered(getFilters({ sort, timeWindow: newTimeWindow }));
-  }
-
-  function handleTimeWindowChange(tw: TimeWindow) {
-    setTimeWindow(tw);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchFiltered(getFilters({ timeWindow: tw }));
-    trackFeedFilterChanged({ filter_type: "time_window", value: tw });
   }
 
   const isRandom = sortMode === "random_sample";
@@ -324,17 +314,6 @@ export default function Feed({
               />
             </div>
           </div>
-
-          {/* Time window sub-filter for applicable sorts */}
-          {activeConfig?.supportsTimeWindow && (
-            <SortBar
-              activeSort={sortMode}
-              activeTimeWindow={timeWindow}
-              onSortChange={handleSortChange}
-              onTimeWindowChange={handleTimeWindowChange}
-            />
-          )}
-
         </div>
       )}
 
