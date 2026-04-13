@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useTransition, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import FeedCard, { type FeedCardProps } from "./FeedCard";
 import Panel from "./Panel";
 import PixelButton from "./PixelButton";
-import SortBar from "./SortBar";
 import {
   loadFirstPagePosts,
   loadMorePosts,
@@ -16,7 +15,6 @@ import { buildFeedCacheKey } from "@/lib/feed-cache";
 import { SORT_MODES, type SortMode, type TimeWindow } from "@/lib/sort-modes";
 import {
   trackFeedSortChanged,
-  trackFeedFilterChanged,
   trackSearchPerformed,
   trackFeedLoadMore,
 } from "@/lib/tracking-client";
@@ -58,18 +56,18 @@ export default function Feed({
 }: FeedProps) {
   const [allItems, setAllItems] = useState(items);
   const [hasMore, setHasMore] = useState(initialHasMore);
-  const [isPending, startTransition] = useTransition();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isPaging, setIsPaging] = useState(false);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("breakthrough");
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [isFiltered, setIsFiltered] = useState(false);
   const [activeCove, setActiveCove] = useState<string | undefined>(coveSlug);
   const { setCoveName } = useFeedCove();
-  const activeConfig = SORT_MODES.find((mode) => mode.value === sortMode);
   const typeFilter: "all" | "hypothesis" | "discussion" = "all";
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentFiltersRef = useRef<FeedFilters>({});
+  const requestIdRef = useRef(0);
   const [pageCache] = useState(() => {
     const cache = new Map<string, FeedPageResult>();
     const defaultKey = buildFeedCacheKey({
@@ -124,57 +122,52 @@ export default function Feed({
 
   // Re-fetch from offset 0 with current filters/sort
   const fetchFiltered = useCallback(
-    (filters: FeedFilters) => {
-      currentFiltersRef.current = filters;
-      startTransition(async () => {
-        if (currentFiltersRef.current !== filters) return;
+    async (filters: FeedFilters) => {
+      const requestId = ++requestIdRef.current;
+      const nextIsFiltered = isNonDefaultState(filters);
+      const cacheKey = buildFeedCacheKey(filters);
 
-        if (!isNonDefaultState(filters)) {
-          const defaultKey = buildFeedCacheKey({
-            sort: "breakthrough",
-            timeWindow: "all",
-            type: "all",
-            search: "",
-            cove: coveSlug,
-          });
-          const cached = pageCache.get(defaultKey);
-          setAllItems(cached?.items ?? items);
-          setHasMore(cached?.hasMore ?? initialHasMore);
-          setIsFiltered(false);
-          return;
+      if (!nextIsFiltered) {
+        const defaultKey = buildFeedCacheKey({
+          sort: "breakthrough",
+          timeWindow: "all",
+          type: "all",
+          search: "",
+          cove: coveSlug,
+        });
+        const cached = pageCache.get(defaultKey);
+        setAllItems(cached?.items ?? items);
+        setHasMore(cached?.hasMore ?? initialHasMore);
+        setIsFiltered(false);
+        setIsRefreshing(false);
+        return;
+      }
+
+      const cached = pageCache.get(cacheKey);
+      if (cached) {
+        setAllItems(cached.items);
+        setHasMore(cached.hasMore);
+        setIsFiltered(!!nextIsFiltered);
+        setIsRefreshing(false);
+        return;
+      }
+
+      setIsFiltered(!!nextIsFiltered);
+      setIsRefreshing(true);
+      try {
+        const firstPage = await loadFirstPagePosts(filters);
+        if (requestIdRef.current !== requestId) return;
+
+        pageCache.set(cacheKey, firstPage);
+        setAllItems(firstPage.items);
+        setHasMore(firstPage.hasMore);
+      } finally {
+        if (requestIdRef.current === requestId) {
+          setIsRefreshing(false);
         }
-
-        const isCacheable = !filters.search?.trim();
-        const cacheKey = buildFeedCacheKey(filters);
-
-        if (isCacheable) {
-          const cached = pageCache.get(cacheKey);
-          if (cached) {
-            setAllItems(cached.items);
-            setHasMore(cached.hasMore);
-            setIsFiltered(!!(filters.type && filters.type !== "all"));
-            return;
-          }
-
-          const firstPage = await loadFirstPagePosts(filters);
-          if (currentFiltersRef.current !== filters) return;
-
-          pageCache.set(cacheKey, firstPage);
-          setAllItems(firstPage.items);
-          setHasMore(firstPage.hasMore);
-          setIsFiltered(!!(filters.type && filters.type !== "all"));
-          return;
-        }
-
-        const data = await loadAllPosts(0, filters);
-        if (currentFiltersRef.current !== filters) return;
-
-        setAllItems(data);
-        setHasMore(false);
-        setIsFiltered(true);
-      });
+      }
     },
-    [coveSlug, initialHasMore, isNonDefaultState, items, pageCache, startTransition],
+    [coveSlug, initialHasMore, isNonDefaultState, items, pageCache],
   );
 
   // Debounced search handler
@@ -183,7 +176,7 @@ export default function Feed({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const filters = getFilters({ search: value });
-      fetchFiltered(filters);
+      void fetchFiltered(filters);
       if (value.trim()) {
         trackSearchPerformed({
           query: value.trim(),
@@ -203,28 +196,22 @@ export default function Feed({
   function handleSortChange(sort: SortMode) {
     trackFeedSortChanged({ from_sort: sortMode, to_sort: sort });
     setSortMode(sort);
-    const newTimeWindow = sort === "most_cited" ? timeWindow : "all";
+    const newTimeWindow: TimeWindow = "all";
     setTimeWindow(newTimeWindow);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchFiltered(getFilters({ sort, timeWindow: newTimeWindow }));
-  }
-
-  function handleTimeWindowChange(tw: TimeWindow) {
-    setTimeWindow(tw);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchFiltered(getFilters({ timeWindow: tw }));
-    trackFeedFilterChanged({ filter_type: "time_window", value: tw });
+    void fetchFiltered(getFilters({ sort, timeWindow: newTimeWindow }));
   }
 
   const isRandom = sortMode === "random_sample";
-  function handleLoadMore() {
+  async function handleLoadMore() {
     const filters = getFilters();
     trackFeedLoadMore({
       action: isRandom ? "re_roll" : "load_more",
       current_count: allItems.length,
       sort_mode: sortMode,
     });
-    startTransition(async () => {
+    setIsPaging(true);
+    try {
       if (isRandom) {
         // Re-roll: replace feed with fresh random set
         const data = await loadAllPosts(0, filters);
@@ -236,21 +223,26 @@ export default function Feed({
           setHasMore(false);
         }
       }
-    });
+    } finally {
+      setIsPaging(false);
+    }
   }
 
-  function handleLoadAll() {
+  async function handleLoadAll() {
     const filters = getFilters();
     trackFeedLoadMore({
       action: "load_all",
       current_count: allItems.length,
       sort_mode: sortMode,
     });
-    startTransition(async () => {
+    setIsPaging(true);
+    try {
       const rest = await loadAllPosts(allItems.length, filters);
       setAllItems((prev) => [...prev, ...rest]);
       setHasMore(false);
-    });
+    } finally {
+      setIsPaging(false);
+    }
   }
 
   const Wrapper = bare ? "div" : Panel;
@@ -270,7 +262,7 @@ export default function Feed({
             type="button"
             onClick={() => {
               setActiveCove(undefined);
-              fetchFiltered(getFilters({ cove: undefined }));
+              void fetchFiltered(getFilters({ cove: undefined }));
             }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[14px] font-bold whitespace-nowrap shrink-0 transition-colors ${
               !activeCove
@@ -288,7 +280,7 @@ export default function Feed({
                 type="button"
                 onClick={() => {
                   setActiveCove(cove.slug);
-                  fetchFiltered(getFilters({ cove: cove.slug }));
+                  void fetchFiltered(getFilters({ cove: cove.slug }));
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[14px] font-bold whitespace-nowrap shrink-0 transition-colors ${
                   isActive
@@ -331,22 +323,11 @@ export default function Feed({
               />
             </div>
           </div>
-
-          {/* Time window sub-filter for applicable sorts */}
-          {activeConfig?.supportsTimeWindow && (
-            <SortBar
-              activeSort={sortMode}
-              activeTimeWindow={timeWindow}
-              onSortChange={handleSortChange}
-              onTimeWindowChange={handleTimeWindowChange}
-            />
-          )}
-
         </div>
       )}
 
       {/* Loading state */}
-      {isPending && allItems.length === 0 && (
+      {isRefreshing && allItems.length === 0 && (
         <div className="flex flex-col items-center gap-3 py-8">
           <div className="relative h-1 w-32 overflow-hidden bg-dawn-2 rounded-full">
             <div className="absolute inset-0 w-1/3 bg-blue-4 animate-feed-scan rounded-full" />
@@ -358,13 +339,13 @@ export default function Feed({
       )}
 
       {/* Feed cards */}
-      {allItems.length === 0 && !isPending && (
+      {allItems.length === 0 && !isRefreshing && !isPaging && (
         <p className="paragraph-s text-smoke-5 py-4 text-center">
           {isFiltered ? "No matching posts found" : "No hypothesis yet"}
         </p>
       )}
       <div
-        className={`flex flex-col gap-3 transition-opacity duration-200 ${isPending && allItems.length > 0 ? "opacity-50 pointer-events-none" : ""}`}
+        className={`flex flex-col gap-3 transition-opacity duration-200 ${(isRefreshing || isPaging) && allItems.length > 0 ? "opacity-50 pointer-events-none" : ""}`}
       >
         {allItems.map((item, i) => (
           <FeedCard
@@ -382,9 +363,9 @@ export default function Feed({
             textColor="dark-space"
             pill
             onClick={handleLoadMore}
-            disabled={isPending}
+            disabled={isRefreshing || isPaging}
           >
-            {isPending ? "Loading..." : isRandom ? "Re-roll" : "Load more"}
+            {isPaging ? "Loading..." : isRandom ? "Re-roll" : "Load more"}
           </PixelButton>
           {!isRandom && (
             <PixelButton
@@ -392,9 +373,9 @@ export default function Feed({
               textColor="dark-space"
               pill
               onClick={handleLoadAll}
-              disabled={isPending}
+              disabled={isRefreshing || isPaging}
             >
-              {isPending ? "Loading..." : "Load all"}
+              {isPaging ? "Loading..." : "Load all"}
             </PixelButton>
           )}
         </div>
