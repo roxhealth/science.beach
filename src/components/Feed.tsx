@@ -69,7 +69,7 @@ export default function Feed({
   const typeFilter: "all" | "hypothesis" | "discussion" = "all";
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentFiltersRef = useRef<FeedFilters>({});
+  const requestIdRef = useRef(0);
   const [pageCache] = useState(() => {
     const cache = new Map<string, FeedPageResult>();
     const defaultKey = buildFeedCacheKey({
@@ -125,53 +125,46 @@ export default function Feed({
   // Re-fetch from offset 0 with current filters/sort
   const fetchFiltered = useCallback(
     (filters: FeedFilters) => {
-      currentFiltersRef.current = filters;
-      startTransition(async () => {
-        if (currentFiltersRef.current !== filters) return;
+      const requestId = ++requestIdRef.current;
+      const nextIsFiltered = isNonDefaultState(filters);
+      const cacheKey = buildFeedCacheKey(filters);
 
-        if (!isNonDefaultState(filters)) {
-          const defaultKey = buildFeedCacheKey({
-            sort: "breakthrough",
-            timeWindow: "all",
-            type: "all",
-            search: "",
-            cove: coveSlug,
-          });
-          const cached = pageCache.get(defaultKey);
-          setAllItems(cached?.items ?? items);
-          setHasMore(cached?.hasMore ?? initialHasMore);
-          setIsFiltered(false);
-          return;
-        }
+      if (!nextIsFiltered) {
+        const defaultKey = buildFeedCacheKey({
+          sort: "breakthrough",
+          timeWindow: "all",
+          type: "all",
+          search: "",
+          cove: coveSlug,
+        });
+        const cached = pageCache.get(defaultKey);
+        setAllItems(cached?.items ?? items);
+        setHasMore(cached?.hasMore ?? initialHasMore);
+        setIsFiltered(false);
+        return;
+      }
 
-        const isCacheable = !filters.search?.trim();
-        const cacheKey = buildFeedCacheKey(filters);
+      const cached = pageCache.get(cacheKey);
+      if (cached) {
+        setAllItems(cached.items);
+        setHasMore(cached.hasMore);
+        setIsFiltered(!!nextIsFiltered);
+        return;
+      }
 
-        if (isCacheable) {
-          const cached = pageCache.get(cacheKey);
-          if (cached) {
-            setAllItems(cached.items);
-            setHasMore(cached.hasMore);
-            setIsFiltered(!!(filters.type && filters.type !== "all"));
-            return;
-          }
-
-          const firstPage = await loadFirstPagePosts(filters);
-          if (currentFiltersRef.current !== filters) return;
-
-          pageCache.set(cacheKey, firstPage);
-          setAllItems(firstPage.items);
-          setHasMore(firstPage.hasMore);
-          setIsFiltered(!!(filters.type && filters.type !== "all"));
-          return;
-        }
-
-        const data = await loadAllPosts(0, filters);
-        if (currentFiltersRef.current !== filters) return;
-
-        setAllItems(data);
+      if (filters.search?.trim()) {
+        setAllItems([]);
         setHasMore(false);
-        setIsFiltered(true);
+      }
+      setIsFiltered(!!nextIsFiltered);
+
+      startTransition(async () => {
+        const firstPage = await loadFirstPagePosts(filters);
+        if (requestIdRef.current !== requestId) return;
+
+        pageCache.set(cacheKey, firstPage);
+        setAllItems(firstPage.items);
+        setHasMore(firstPage.hasMore);
       });
     },
     [coveSlug, initialHasMore, isNonDefaultState, items, pageCache, startTransition],

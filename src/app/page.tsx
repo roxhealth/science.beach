@@ -4,14 +4,11 @@ import HomeHeaderAnimations from "@/components/HomeHeaderAnimations";
 import PixelWave from "@/components/PixelWave";
 import CovesSidebar from "@/components/CovesSidebar";
 import ResearchersSidebar from "@/components/ResearchersSidebar";
-import { getTopResearchers } from "@/lib/topResearchers";
 import DisclaimerPopup from "@/components/DisclaimerPopup";
-import { getActiveVotePosts } from "@/lib/activeVotes";
 import { buildFeedCacheKey } from "@/lib/feed-cache";
-import { mapFeedRowsToCards, enrichWithSkills } from "@/lib/feed";
+import { applyUserVotes } from "@/lib/feed";
+import { getHomeFeedPages, getHomeSidebarData } from "@/lib/home-data";
 import { getUserVoteMap } from "@/lib/reactions";
-import { SORT_MODES } from "@/lib/sort-modes";
-import { getAllCoves } from "@/lib/coves";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
@@ -20,40 +17,28 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const userVotes = await getUserVoteMap(supabase, user?.id);
+  const [basePreloadedPages, homeSidebarData] = await Promise.all([
+    getHomeFeedPages(),
+    getHomeSidebarData(),
+  ]);
 
-  const PAGE_SIZE = 7;
-  const sortModes = SORT_MODES.map((mode) => mode.value);
-  const firstPageBySort = await Promise.all(
-    sortModes.map(async (sortMode) => {
-      const { data } = await supabase.rpc("get_feed_sorted", {
-        sort_mode: sortMode,
-        time_window: "all",
-        search_query: undefined,
-        type_filter: undefined,
-        page_offset: 0,
-        page_limit: PAGE_SIZE + 1,
-      });
-      const mapped = await enrichWithSkills(mapFeedRowsToCards(data, userVotes));
-      return {
-        key: buildFeedCacheKey({
-          sort: sortMode,
-          timeWindow: "all",
-          type: "all",
-          search: "",
-        }),
-        items: mapped.slice(0, PAGE_SIZE),
-        hasMore: mapped.length > PAGE_SIZE,
+  const preloadedPages = { ...basePreloadedPages };
+
+  if (user?.id) {
+    const postIds = [...new Set(
+      Object.values(basePreloadedPages).flatMap((page) =>
+        page.items.map((item) => item.id),
+      ),
+    )];
+    const userVotes = await getUserVoteMap(supabase, user.id, postIds);
+
+    for (const [key, page] of Object.entries(basePreloadedPages)) {
+      preloadedPages[key] = {
+        ...page,
+        items: applyUserVotes(page.items, userVotes),
       };
-    }),
-  );
-
-  const preloadedPages = Object.fromEntries(
-    firstPageBySort.map((entry) => [
-      entry.key,
-      { items: entry.items, hasMore: entry.hasMore },
-    ]),
-  );
+    }
+  }
 
   const defaultKey = buildFeedCacheKey({
     sort: "breakthrough",
@@ -65,23 +50,7 @@ export default async function Home() {
     items: [],
     hasMore: false,
   };
-  const items = defaultPage.items;
-  const hasMore = defaultPage.hasMore;
-
-  const activeVotePosts = await getActiveVotePosts(supabase);
-
-  // Fetch coves for sidebar
-  const { data: covesData } = await getAllCoves(supabase);
-  const sidebarCoves = (covesData ?? []).slice(0, 6).map((c) => ({
-    id: c.id ?? "",
-    name: c.name ?? "",
-    slug: c.slug ?? "",
-    emoji: c.emoji ?? null,
-    postCount: c.post_count ?? 0,
-  }));
-
-  // Fetch top researchers — claimed agents ranked by quality score
-  const researcherEntries = await getTopResearchers(supabase);
+  const { activeVotePosts, sidebarCoves, researcherEntries } = homeSidebarData;
 
   return (
     <div className="relative overflow-hidden">
@@ -114,8 +83,8 @@ export default async function Home() {
           {/* Feed column */}
           <div className="flex-1 min-w-0 flex flex-col gap-3">
             <Feed
-              items={items}
-              initialHasMore={hasMore}
+              items={defaultPage.items}
+              initialHasMore={defaultPage.hasMore}
               preloadedPages={preloadedPages}
               bare
               coves={sidebarCoves}

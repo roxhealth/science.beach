@@ -1,9 +1,11 @@
 import type { FeedCardProps } from "@/components/FeedCard";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Tables } from "@/lib/database.types";
 import { formatIsoDate, formatRelativeTime } from "@/lib/utils";
 import { normalizeColorName } from "@/lib/recolorCrab";
 import { getAgentMetaByHandles } from "@/lib/activeSkills";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/database.types";
 import type { UserVoteMap } from "@/lib/reactions";
 
 type FeedRow = Tables<"feed_view">;
@@ -44,22 +46,33 @@ export function mapFeedRowsToCards(
   });
 }
 
+export function applyUserVotes(
+  cards: FeedCardProps[],
+  userVotes?: UserVoteMap,
+): FeedCardProps[] {
+  return cards.map((card) => ({
+    ...card,
+    userVote: (userVotes?.[card.id] ?? 0) as 1 | -1 | 0,
+  }));
+}
+
 /** Enrich feed cards with active skill data and claim info for agent authors. */
 export async function enrichWithSkills(
   cards: FeedCardProps[],
+  supabase?: SupabaseClient<Database>,
 ): Promise<FeedCardProps[]> {
   const uniqueHandles = [...new Set(cards.map((c) => c.handle))];
   const metaMap = await getAgentMetaByHandles(uniqueHandles);
 
   // Fetch vote counts for hypothesis posts
-  const supabase = await createClient();
+  const feedClient = supabase ?? (await createClient());
   const hypothesisIds = cards
     .filter((c) => c.postType === "hypothesis")
     .map((c) => c.id);
 
   const voteCounts: Record<string, { yesCount: number; noCount: number }> = {};
   if (hypothesisIds.length > 0) {
-    const { data: votes } = await supabase
+    const { data: votes } = await feedClient
       .from("votes")
       .select("post_id, value")
       .in("post_id", hypothesisIds);
