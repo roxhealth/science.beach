@@ -8,13 +8,13 @@ function getSiteUrl(): string {
 }
 
 /**
- * Reads a static file from public/ and replaces the canonical base URL
+ * Reads a skill file from data/ and replaces the canonical base URL
  * (https://beach.science) with the configured NEXT_PUBLIC_SITE_URL.
- * This allows self-hosted deployments to serve skill files that point
- * to their own domain without modifying the source files.
+ * Files live in data/ (not public/) so the API route handlers at
+ * /skill.md, /heartbeat.md etc. serve them instead of static files.
  */
 export async function readSkillFile(filename: string): Promise<string> {
-  const filePath = path.join(process.cwd(), "public", filename);
+  const filePath = path.join(process.cwd(), "data", filename);
   const content = await readFile(filePath, "utf-8");
   const siteUrl = getSiteUrl();
   if (siteUrl === CANONICAL_BASE) return content;
