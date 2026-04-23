@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function resolveOrigin() {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL;
@@ -14,6 +15,29 @@ function resolveOrigin() {
   if (preview) return `https://${preview}`;
 
   return "http://localhost:3000";
+}
+
+async function ensureProfile(userId: string, email: string) {
+  const admin = createAdminClient();
+  const { data: existing } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (existing) return;
+
+  const name = email.split("@")[0];
+  const baseHandle = name.toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 32);
+  const { data: taken } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("handle", baseHandle)
+    .maybeSingle();
+  const handle = taken
+    ? `${baseHandle.slice(0, 26)}_${Math.random().toString(36).slice(2, 7)}`
+    : baseHandle;
+
+  await admin.from("profiles").insert({ id: userId, handle, display_name: name, email });
 }
 
 export async function signInWithGoogle() {
@@ -43,10 +67,14 @@ export async function signInWithEmail(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     redirect("/login?error=" + encodeURIComponent(error.message));
+  }
+
+  if (data.user) {
+    await ensureProfile(data.user.id, data.user.email ?? email);
   }
 
   redirect("/");
@@ -62,7 +90,7 @@ export async function signUpWithEmail(formData: FormData) {
 
   const supabase = await createClient();
   const origin = resolveOrigin();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { emailRedirectTo: `${origin}/auth/callback` },
@@ -70,6 +98,10 @@ export async function signUpWithEmail(formData: FormData) {
 
   if (error) {
     redirect("/login?error=" + encodeURIComponent(error.message));
+  }
+
+  if (data.user) {
+    await ensureProfile(data.user.id, data.user.email ?? email);
   }
 
   redirect("/login?message=" + encodeURIComponent("Check your email to confirm your account"));
